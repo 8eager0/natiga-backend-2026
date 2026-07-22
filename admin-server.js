@@ -23,6 +23,10 @@ import path from 'path';
 import os from 'os';
 import XLSX from 'xlsx';
 import zlib from 'zlib';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import rateLimit from 'express-rate-limit';
@@ -178,12 +182,14 @@ let sqliteDb = null;
 const initSqliteDatabase = () => {
   try {
     const candidateSqliteGz = [
+      path.resolve(__dirname, 'database/natiga.sqlite.gz'),
+      path.resolve(__dirname, 'src/data/natiga.sqlite.gz'),
       path.resolve('database/natiga.sqlite.gz'),
-      path.join(process.cwd(), 'database/natiga.sqlite.gz'),
-      path.resolve('src/data/natiga.sqlite.gz')
+      path.join(process.cwd(), 'database/natiga.sqlite.gz')
     ];
     const candidateSqlite = [
       path.join(os.tmpdir(), 'natiga.sqlite'),
+      path.resolve(__dirname, 'database/natiga.sqlite'),
       path.resolve('database/natiga.sqlite'),
       path.join(process.cwd(), 'database/natiga.sqlite')
     ];
@@ -219,10 +225,10 @@ const loadStudentsFromDisk = () => {
   if (sqliteDb) return; // إذا كان SQLite مفعل، لا تحمّل الملف بالكامل بالـ RAM لترشيد الاستهلاك
   try {
     const candidateGzPaths = [
+      path.resolve(__dirname, 'database/students.json.gz'),
+      path.resolve(__dirname, 'src/data/students.json.gz'),
       path.resolve('database/students.json.gz'),
-      path.resolve('src/data/students.json.gz'),
-      path.join(process.cwd(), 'database/students.json.gz'),
-      path.join(process.cwd(), 'src/data/students.json.gz')
+      path.join(process.cwd(), 'database/students.json.gz')
     ];
 
     let foundGz = candidateGzPaths.find(p => fs.existsSync(p));
