@@ -22,6 +22,7 @@ import fs from 'fs';
 import path from 'path';
 import os from 'os';
 import XLSX from 'xlsx';
+import zlib from 'zlib';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import rateLimit from 'express-rate-limit';
@@ -35,7 +36,6 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'X-XSS-Protection'],
   optionsSuccessStatus: 200
 }));
-app.options('*', cors());
 app.use(express.json());
 
 const ADMIN_PORT = process.env.PORT || process.env.ADMIN_PORT || 4000;
@@ -172,15 +172,26 @@ let siteSettings = {
 // =============================
 // تحميل البيانات في الذاكرة
 // =============================
+const gzPath = path.resolve('database/students.json.gz');
+
 const loadStudentsFromDisk = () => {
   try {
-    if (fs.existsSync(dataPath)) {
+    if (fs.existsSync(gzPath)) {
+      const buffer = fs.readFileSync(gzPath);
+      const decompressed = zlib.gunzipSync(buffer);
+      studentsArray = JSON.parse(decompressed.toString('utf-8'));
+      seatMap.clear();
+      for (const st of studentsArray) {
+        if (st.seatNumber) seatMap.set(normalizeArabic(st.seatNumber), st);
+      }
+      console.log(`✅ Loaded ${studentsArray.length.toLocaleString('ar-EG')} students from database/students.json.gz into RAM`);
+    } else if (fs.existsSync(dataPath)) {
       studentsArray = JSON.parse(fs.readFileSync(dataPath, 'utf-8'));
       seatMap.clear();
       for (const st of studentsArray) {
         if (st.seatNumber) seatMap.set(normalizeArabic(st.seatNumber), st);
       }
-      console.log(`✅ Loaded ${studentsArray.length} students into RAM`);
+      console.log(`✅ Loaded ${studentsArray.length.toLocaleString('ar-EG')} students into RAM`);
     }
   } catch (e) {
     console.error('Error loading students:', e.message);
