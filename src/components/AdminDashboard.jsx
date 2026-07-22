@@ -93,7 +93,7 @@ const LoginPage = ({ onLogin }) => {
           <div class="w-20 h-20 mx-auto rounded-3xl bg-emerald-600 flex items-center justify-center shadow-2xl shadow-emerald-600/30 mb-4">
             <ShieldCheck class="w-11 h-11 text-white" />
           </div>
-          <h1 class="text-2xl font-black text-white mb-1">لوحة التحكم الإدارية</h1>
+          <h1 class="text-2xl font-black text-white mb-1">لوحة التحكم</h1>
 
         </div>
 
