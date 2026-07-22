@@ -1,5 +1,5 @@
 import React from 'react';
-import { GraduationCap, ShieldCheck, ExternalLink, Heart } from 'lucide-react';
+import { GraduationCap, ShieldCheck, ExternalLink, Lock } from 'lucide-react';
 
 export default function Footer() {
   return (
@@ -55,8 +55,19 @@ export default function Footer() {
                 <span>قاعدة بيانات مؤمنة ومشفرة</span>
               </div>
               <p class="text-slate-500 text-[11px] leading-relaxed">
-                جميع البيانات المعروضة مراجعة ومحدثة طبقاً لاختبارات الدور الأول 2026.
+                جميع البيانات المعروضة مراجعة ومحدثة طبقاً لااختبارات الدور الأول 2026.
               </p>
+              
+              {/* Direct Admin Portal Link */}
+              <div class="pt-2">
+                <a
+                  href="?admin"
+                  class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-emerald-400 font-bold text-[11px] transition-colors border border-slate-700"
+                >
+                  <Lock class="w-3.5 h-3.5" />
+                  <span>بوابة دخول الإدارة (Admin)</span>
+                </a>
+              </div>
             </div>
           </div>
         </div>

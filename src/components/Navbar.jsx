@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, BarChart3, Moon, Sun, GraduationCap, Menu, X, ShieldCheck } from 'lucide-react';
+import { Search, BarChart3, Moon, Sun, GraduationCap, Menu, X, ShieldCheck, Lock } from 'lucide-react';
 
 export default function Navbar({ activeTab, setActiveTab, darkMode, setDarkMode }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -8,6 +8,10 @@ export default function Navbar({ activeTab, setActiveTab, darkMode, setDarkMode 
     { id: 'search', label: 'الاستعلام عن النتيجة', icon: Search },
     { id: 'stats', label: 'إحصائيات المجاميع', icon: BarChart3 },
   ];
+
+  const handleAdminLogin = () => {
+    window.location.href = '?admin';
+  };
 
   return (
     <header class="sticky top-0 z-50 backdrop-blur-md bg-white/90 dark:bg-slate-900/90 border-b border-emerald-100 dark:border-slate-800 shadow-sm transition-colors">
@@ -75,8 +79,20 @@ export default function Navbar({ activeTab, setActiveTab, darkMode, setDarkMode 
             })}
           </nav>
 
-          {/* Right Controls: Dark mode & Mobile Toggle */}
+          {/* Right Controls: Admin Login, Dark mode & Mobile Toggle */}
           <div class="flex items-center gap-2">
+            
+            {/* Admin Login Button */}
+            <button
+              onClick={handleAdminLogin}
+              class="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-xs font-black text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 dark:hover:bg-emerald-900 transition-all shadow-sm"
+              title="دخول لوحة تحكم الإدارة"
+            >
+              <Lock class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+              <span class="hidden sm:inline">دخول الإدارة</span>
+            </button>
+
+            {/* Dark Mode Toggle */}
             <button
               onClick={() => setDarkMode(!darkMode)}
               class="p-2.5 rounded-xl text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
@@ -120,6 +136,14 @@ export default function Navbar({ activeTab, setActiveTab, darkMode, setDarkMode 
               </button>
             );
           })}
+
+          <button
+            onClick={handleAdminLogin}
+            class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-base bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800"
+          >
+            <Lock class="w-5 h-5 text-emerald-600" />
+            <span>تسجيل دخول الإدارة (Admin)</span>
+          </button>
         </div>
       )}
     </header>
