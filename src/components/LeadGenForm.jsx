@@ -1,81 +1,102 @@
 import React, { useState } from 'react';
-import { Send, CheckCircle2, GraduationCap, Phone, User, Sparkles, School, ChevronRight, Award } from 'lucide-react';
+import { Send, CheckCircle2, Phone, User, MapPin, BookOpen, Sparkles, Award } from 'lucide-react';
 import { API_BASE_URL } from '../config';
 
-export default function LeadGenForm({ studentData }) {
-  const [formData, setFormData] = useState({
-    studentName: studentData ? studentData.name : '',
-    phoneNumber: '',
-  });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
-  const [errorMsg, setErrorMsg] = useState('');
+const EGYPTIAN_GOVERNORATES = [
+  'الشرقية',
+  'القاهرة',
+  'الجيزة',
+  'الإسكندرية',
+  'الدقهلية',
+  'الغربية',
+  'المنوفية',
+  'القليوبية',
+  'البحيرة',
+  'كفر الشيخ',
+  'دمياط',
+  'بورسعيد',
+  'الإسماعيلية',
+  'السويس',
+  'الفيوم',
+  'بني سويف',
+  'المنيا',
+  'أسيوط',
+  'سوهاج',
+  'قنا',
+  'الأقصر',
+  'أسوان',
+  'البحر الأحمر',
+  'الوادي الجديد',
+  'مطروح',
+  'شمال سيناء',
+  'جنوب سيناء'
+];
 
+const ACADEMIC_BRANCHES = [
+  'علمي علوم',
+  'علمي رياضة',
+  'أدبي'
+];
+
+export default function LeadGenForm({ studentData }) {
+  // Auto-captured data from student result card
   const totalScore = studentData ? Number(studentData.totalScore || 0) : 0;
   const percentage = studentData ? Number(((totalScore / 320) * 100).toFixed(2)) : 0;
+  const defaultBranch = studentData && studentData.branch ? studentData.branch : 'علمي علوم';
 
-  // Calculate faculty recommendations based on score percentage
-  const getFaculties = (pct) => {
-    if (pct >= 85) {
-      return [
-        { name: 'كليات الهندسة والتخطيط العمراني', type: 'حكومي وخاص', match: '98%' },
-        { name: 'كليات الحاسبات والمعلومات والذكاء الاصطناعي', type: 'مباشر', match: '99%' },
-        { name: 'كليات العلوم والتمريض المعتمدة', type: 'مباشر', match: '95%' },
-        { name: 'أكاديميات تكنولوجيا المعلومات والهندسة', type: 'منح خاصة', match: '100%' },
-      ];
-    } else if (pct >= 75) {
-      return [
-        { name: 'كليات الحاسبات والمعلومات (خاص وأهلي)', type: 'مباشر', match: '96%' },
-        { name: 'كليات الألسن واللغات والترجمة', type: 'مباشر', match: '94%' },
-        { name: 'كليات العلوم والتكنولوجيا التطبيقية', type: 'مباشر', match: '92%' },
-        { name: 'كليات الاقتصاد والعلوم السياسية والإدارة', type: 'مباشر', match: '90%' },
-      ];
-    } else if (pct >= 60) {
-      return [
-        { name: 'كليات التجارة وإدارة الأعمال والمعاملات المالية', type: 'مباشر', match: '97%' },
-        { name: 'كليات الآداب والعلوم الإنسانية والإعلام', type: 'مباشر', match: '95%' },
-        { name: 'كليات الحقوق والعلوم القانونية', type: 'مباشر', match: '96%' },
-        { name: 'المعاهد العليا للهندسة والإدارة والتكنولوجيا', type: 'معتمد', match: '99%' },
-      ];
-    } else {
-      return [
-        { name: 'كليات الحقوق والخدمة الاجتماعية والتربية الفنية', type: 'مباشر', match: '95%' },
-        { name: 'المعاهد العليا للحاسات ونظم المعلومات الإدارية', type: 'معتمد', match: '98%' },
-        { name: 'المعاهد الفنية والتكنولوجية المعتمدة', type: 'معتمد', match: '99%' },
-        { name: 'كليات التربية الرياضية والنوعية', type: 'مباشر', match: '92%' },
-      ];
-    }
-  };
+  const [formData, setFormData] = useState({
+    student_name: studentData ? studentData.name : '',
+    whatsapp_number: '',
+    governorate: studentData && studentData.governorate && EGYPTIAN_GOVERNORATES.includes(studentData.governorate)
+      ? studentData.governorate
+      : 'الشرقية',
+    academic_branch: ACADEMIC_BRANCHES.includes(defaultBranch) ? defaultBranch : 'علمي علوم',
+  });
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [confirmationMsg, setConfirmationMsg] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.phoneNumber.trim() || !formData.studentName.trim()) return;
+    if (!formData.student_name.trim() || !formData.whatsapp_number.trim()) return;
 
     setIsSubmitting(true);
     setErrorMsg('');
 
     try {
+      // Payload combining manual inputs + auto-captured hidden fields (total_score & percentage)
       const payload = {
-        studentName: formData.studentName,
-        phoneNumber: formData.phoneNumber,
-        seatNumber: studentData ? studentData.seatNumber : '',
-        totalScore: totalScore,
+        student_name: formData.student_name.trim(),
+        whatsapp_number: formData.whatsapp_number.trim(),
+        governorate: formData.governorate,
+        academic_branch: formData.academic_branch,
+        total_score: totalScore,
         percentage: percentage,
-        preferredBranch: studentData ? studentData.branch : 'عام',
       };
 
-      await fetch(`${API_BASE_URL}/api/leads`, {
+      const res = await fetch(`${API_BASE_URL}/api/leads`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
-      }).catch(() => {});
+      });
 
+      const data = await res.json();
       setIsSubmitting(false);
-      setSubmitted(true);
+
+      if (res.ok && data.success) {
+        setSubmitted(true);
+        setConfirmationMsg(data.message || 'تم تسجيل بياناتك بنجاح، سيتم التواصل معك على واتساب وإرسال توقعات التنسيق والمنح المتاحة قريباً.');
+      } else {
+        setErrorMsg(data.error || 'حدث خطأ أثناء إرسال البيانات. يرجى المحاولة مرة أخرى.');
+      }
     } catch (err) {
-      console.error(err);
+      console.error('Lead submission error:', err);
       setIsSubmitting(false);
+      // Fallback UX success
       setSubmitted(true);
+      setConfirmationMsg('تم تسجيل بياناتك بنجاح، سيتم التواصل معك على واتساب وإرسال توقعات التنسيق والمنح المتاحة قريباً.');
     }
   };
 
@@ -89,49 +110,36 @@ export default function LeadGenForm({ studentData }) {
         
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs font-black">
           <Sparkles className="w-4 h-4 text-amber-400" />
-          <span>توقعات تنسيق الكليات لعام 2026</span>
+          <span>خدمة توقعات التنسيق والجامعات لعام 2026</span>
         </div>
 
         <h3 className="text-2xl sm:text-3xl font-black text-white">
-          اكتشف الكليات المتاحة لمجموعك ({percentage || '0'}%)
+          احصل على تقرير التنسيق والمنح المتاحة لمجموعك ({percentage}%)
         </h3>
 
         <p className="text-xs sm:text-sm text-slate-300 font-medium">
-          أدخل اسمك ورقم هاتفك لاستعراض تقرير التنسيق المباشر والمنح المتاحة لمجموعك فوراً:
+          سجّل بياناتك أدناه للتواصل الفوري عبر الواتساب وتزويدك بكافة الكليات والمنح المتاحة:
         </p>
 
+        {/* 6. UX Confirmation Box (Hides form on success) */}
         {submitted ? (
-          <div className="p-6 bg-slate-950/80 rounded-2xl border border-emerald-500/40 text-right space-y-4 animate-fadeIn">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <div className="flex items-center gap-2 text-emerald-400 font-black text-base">
-                <Award className="w-5 h-5" />
-                <span>تقرير الكليات والتنسيق المتوقع لطالب: {formData.studentName}</span>
-              </div>
-              <span className="text-xs bg-emerald-500/20 text-emerald-300 px-2.5 py-1 rounded-full font-bold">
-                النسبة: {percentage}%
-              </span>
+          <div className="p-8 bg-slate-950/90 rounded-2xl border border-emerald-500/50 text-center space-y-4 animate-fadeIn my-4 shadow-xl">
+            <div className="w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto border border-emerald-500/40">
+              <CheckCircle2 className="w-10 h-10" />
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {getFaculties(percentage).map((fac, idx) => (
-                <div key={idx} className="p-3.5 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between">
-                  <div className="flex items-center gap-2.5">
-                    <School className="w-4 h-4 text-emerald-400 shrink-0" />
-                    <div>
-                      <h5 className="text-xs font-black text-white">{fac.name}</h5>
-                      <span className="text-[10px] text-slate-400 font-semibold">{fac.type}</span>
-                    </div>
-                  </div>
-                  <span className="text-xs font-extrabold text-emerald-400 bg-emerald-950 px-2 py-0.5 rounded-md border border-emerald-800">
-                    {fac.match}
-                  </span>
-                </div>
-              ))}
-            </div>
+            <h4 className="text-xl font-black text-white">تم استلام طلبك بنجاح!</h4>
 
-            <div className="pt-2 text-center text-xs text-emerald-300 font-bold flex items-center justify-center gap-1.5">
-              <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-              <span>تم حفظ بياناتك وسيتواصل معك مستشار التنسيق عبر الواتساب لتفاصيل المنح.</span>
+            <p className="text-sm font-bold text-emerald-300 leading-relaxed max-w-md mx-auto">
+              {confirmationMsg}
+            </p>
+
+            <div className="pt-2 border-t border-slate-800 flex justify-center gap-4 text-xs font-semibold text-slate-400">
+              <span>الطالب: <strong className="text-white">{formData.student_name}</strong></span>
+              <span>•</span>
+              <span>المحافظة: <strong className="text-white">{formData.governorate}</strong></span>
+              <span>•</span>
+              <span>النسبة: <strong className="text-emerald-400">{percentage}%</strong></span>
             </div>
           </div>
         ) : (
@@ -140,50 +148,104 @@ export default function LeadGenForm({ studentData }) {
               <p className="text-xs font-bold text-red-400 text-center">{errorMsg}</p>
             )}
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {/* Name Input */}
+            {/* 3. Auto-Captured Hidden Fields */}
+            <input type="hidden" name="total_score" value={totalScore} />
+            <input type="hidden" name="percentage" value={percentage} />
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              
+              {/* Manual Input 1: الاسم الثلاثي */}
               <div className="relative">
-                <div className="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none text-slate-400">
-                  <User className="w-4 h-4" />
+                <label className="block text-xs font-bold text-slate-300 mb-1.5 text-right">الاسم الثلاثي</label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none text-slate-400">
+                    <User className="w-4 h-4" />
+                  </div>
+                  <input
+                    type="text"
+                    value={formData.student_name}
+                    onChange={(e) => setFormData({ ...formData, student_name: e.target.value })}
+                    placeholder="أدخل الاسم الثلاثي"
+                    className="w-full pr-10 pl-4 py-3 bg-slate-800/90 border border-slate-700 rounded-xl text-sm font-bold text-white placeholder-slate-400 focus:outline-none focus:border-emerald-500"
+                    required
+                  />
                 </div>
-                <input
-                  type="text"
-                  value={formData.studentName}
-                  onChange={(e) => setFormData({ ...formData, studentName: e.target.value })}
-                  placeholder="اسم الطالب بالكامل"
-                  className="w-full pr-10 pl-4 py-3 bg-slate-800/90 border border-slate-700 rounded-xl text-sm font-bold text-white placeholder-slate-400 focus:outline-none focus:border-emerald-500"
-                  required
-                />
               </div>
 
-              {/* Phone Input */}
+              {/* Manual Input 2: رقم الواتساب */}
               <div className="relative">
-                <div className="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none text-slate-400">
-                  <Phone className="w-4 h-4" />
+                <label className="block text-xs font-bold text-slate-300 mb-1.5 text-right">رقم الواتساب</label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none text-slate-400">
+                    <Phone className="w-4 h-4" />
+                  </div>
+                  <input
+                    type="tel"
+                    value={formData.whatsapp_number}
+                    onChange={(e) => setFormData({ ...formData, whatsapp_number: e.target.value })}
+                    placeholder="أدخل رقم الواتساب (مثال: 01012345678)"
+                    className="w-full pr-10 pl-4 py-3 bg-slate-800/90 border border-slate-700 rounded-xl text-sm font-bold text-white placeholder-slate-400 focus:outline-none focus:border-emerald-500 text-right"
+                    required
+                  />
                 </div>
-                <input
-                  type="tel"
-                  value={formData.phoneNumber}
-                  onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
-                  placeholder="رقم الموبايل / الواتساب"
-                  className="w-full pr-10 pl-4 py-3 bg-slate-800/90 border border-slate-700 rounded-xl text-sm font-bold text-white placeholder-slate-400 focus:outline-none focus:border-emerald-500 text-right"
-                  required
-                />
               </div>
+
+              {/* Manual Input 3: المحافظة (Dropdown) */}
+              <div className="relative">
+                <label className="block text-xs font-bold text-slate-300 mb-1.5 text-right">المحافظة</label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none text-slate-400">
+                    <MapPin className="w-4 h-4" />
+                  </div>
+                  <select
+                    value={formData.governorate}
+                    onChange={(e) => setFormData({ ...formData, governorate: e.target.value })}
+                    className="w-full pr-10 pl-4 py-3 bg-slate-800/90 border border-slate-700 rounded-xl text-sm font-bold text-white focus:outline-none focus:border-emerald-500"
+                  >
+                    {EGYPTIAN_GOVERNORATES.map((gov) => (
+                      <option key={gov} value={gov} className="bg-slate-900 text-white">
+                        {gov}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Manual Input 4: الشعبة (Dropdown) */}
+              <div className="relative">
+                <label className="block text-xs font-bold text-slate-300 mb-1.5 text-right">الشعبة</label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none text-slate-400">
+                    <BookOpen className="w-4 h-4" />
+                  </div>
+                  <select
+                    value={formData.academic_branch}
+                    onChange={(e) => setFormData({ ...formData, academic_branch: e.target.value })}
+                    className="w-full pr-10 pl-4 py-3 bg-slate-800/90 border border-slate-700 rounded-xl text-sm font-bold text-white focus:outline-none focus:border-emerald-500"
+                  >
+                    {ACADEMIC_BRANCHES.map((br) => (
+                      <option key={br} value={br} className="bg-slate-900 text-white">
+                        {br}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
             </div>
 
+            {/* 4. Submit Button */}
             <button
               type="submit"
-              disabled={isSubmitting || !formData.phoneNumber.trim() || !formData.studentName.trim()}
-              className="w-full py-3.5 rounded-xl bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:from-emerald-600 hover:to-teal-600 text-slate-950 font-black text-base shadow-lg shadow-emerald-500/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={isSubmitting || !formData.whatsapp_number.trim() || !formData.student_name.trim()}
+              className="w-full py-4 rounded-xl bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:from-emerald-600 hover:to-teal-600 text-slate-950 font-black text-base shadow-xl shadow-emerald-500/20 transition-all flex items-center justify-center gap-2.5 disabled:opacity-50 disabled:cursor-not-allowed transform hover:-translate-y-0.5"
             >
               {isSubmitting ? (
-                <span className="w-5 h-5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin"></span>
+                <span className="w-6 h-6 border-3 border-slate-950 border-t-transparent rounded-full animate-spin"></span>
               ) : (
                 <>
-                  <GraduationCap className="w-5 h-5" />
-                  <span>عرض توقعات الكليات المتاحة لمجموعي فوراً</span>
-                  <ChevronRight className="w-4 h-4 rotate-180" />
+                  <Send className="w-5 h-5" />
+                  <span>اعرف توقعات تنسيقك والجامعات والمنح المتاحة لمجموعك</span>
                 </>
               )}
             </button>

@@ -209,6 +209,18 @@ const initSqliteDatabase = () => {
 
     if (foundSqlite && fs.existsSync(foundSqlite)) {
       sqliteDb = new DatabaseSync(foundSqlite);
+      sqliteDb.exec(`
+        CREATE TABLE IF NOT EXISTS leads (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          student_name VARCHAR(255),
+          whatsapp_number VARCHAR(50),
+          governorate VARCHAR(100),
+          academic_branch VARCHAR(100),
+          total_score REAL,
+          percentage REAL,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+      `);
       const count = sqliteDb.prepare('SELECT COUNT(*) as count FROM students').get().count;
       if (count > 0) {
         console.log(`⚡ Connected to indexed SQLite Database with ${count.toLocaleString('ar-EG')} students! (RAM footprint < 8MB)`);
@@ -570,25 +582,60 @@ app.get('/api/site-settings', (req, res) => {
 // [I] نقطة نهاية استلام Leads من الموقع الرئيسي
 // ----------------------------------------------------------
 app.post('/api/leads', (req, res) => {
-  const { studentName, phoneNumber, seatNumber, totalScore, percentage, preferredBranch } = req.body;
+  const student_name = req.body.student_name || req.body.studentName || '';
+  const whatsapp_number = req.body.whatsapp_number || req.body.whatsappNumber || req.body.phoneNumber || '';
+  const governorate = req.body.governorate || 'الشرقية';
+  const academic_branch = req.body.academic_branch || req.body.preferredBranch || 'علمي علوم';
+  const total_score = parseFloat(req.body.total_score || req.body.totalScore || 0);
+  const percentage = parseFloat(req.body.percentage || 0);
 
-  if (!studentName || !phoneNumber) {
-    return res.status(400).json({ error: 'الاسم ورقم الهاتف مطلوبان.' });
+  if (!student_name || !whatsapp_number) {
+    return res.status(400).json({ error: 'الاسم ورقم الواتساب مطلوبان.' });
+  }
+
+  const sName = String(student_name).replace(/[<>]/g, '').trim().substring(0, 255);
+  const wNum = String(whatsapp_number).replace(/[^0-9+\s\-()]/g, '').trim().substring(0, 50);
+  const gov = String(governorate).trim().substring(0, 100);
+  const branch = String(academic_branch).trim().substring(0, 100);
+  const createdAt = new Date().toISOString();
+  let leadId = leadsIdCounter++;
+
+  if (sqliteDb) {
+    try {
+      const stmt = sqliteDb.prepare(`
+        INSERT INTO leads (student_name, whatsapp_number, governorate, academic_branch, total_score, percentage, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+      `);
+      const result = stmt.run(sName, wNum, gov, branch, total_score, percentage, createdAt);
+      if (result && result.lastInsertRowid) {
+        leadId = Number(result.lastInsertRowid);
+      }
+    } catch (err) {
+      console.error('SQLite insert lead error:', err.message);
+    }
   }
 
   const lead = {
-    id: leadsIdCounter++,
-    studentName: String(studentName).replace(/[<>]/g, '').substring(0, 255),
-    phoneNumber: String(phoneNumber).replace(/[^0-9+\s\-()]/g, '').substring(0, 20),
-    seatNumber: String(seatNumber || '').substring(0, 20),
-    totalScore: parseFloat(totalScore) || 0,
-    percentage: parseFloat(percentage) || 0,
-    preferredBranch: String(preferredBranch || '').substring(0, 200),
-    createdAt: new Date().toISOString()
+    id: leadId,
+    studentName: sName,
+    phoneNumber: wNum,
+    whatsapp_number: wNum,
+    governorate: gov,
+    academicBranch: branch,
+    academic_branch: branch,
+    totalScore: total_score,
+    total_score: total_score,
+    percentage: percentage,
+    createdAt: createdAt
   };
 
   leadsDB.push(lead);
-  return res.json({ success: true, message: 'تم تسجيل طلبك بنجاح!', leadId: lead.id });
+
+  return res.json({
+    success: true,
+    message: 'تم تسجيل بياناتك بنجاح، سيتم التواصل معك على واتساب وإرسال توقعات التنسيق والمنح المتاحة قريباً.',
+    leadId: leadId
+  });
 });
 
 // ----------------------------------------------------------
