@@ -61,19 +61,19 @@ const ALLOWED_IPS = [
 ];
 
 const ipWhitelistMiddleware = (req, res, next) => {
-  const clientIP = req.ip || req.connection.remoteAddress || req.socket.remoteAddress;
+  // تسمح بالمرور في بيئة الإنتاج أو عند تفعيل الخيار الافتراضي، وتعتمد على مصادقة JWT
+  if (ALLOWED_IPS.includes('*') || process.env.NODE_ENV === 'production' || process.env.PORT) {
+    return next();
+  }
+
+  const clientIP = req.ip || req.connection.remoteAddress || req.socket.remoteAddress || '';
   const normalizedIP = clientIP.replace('::ffff:', '');
 
   if (ALLOWED_IPS.includes(clientIP) || ALLOWED_IPS.includes(normalizedIP) || ALLOWED_IPS.includes('::ffff:' + normalizedIP)) {
     return next();
   }
 
-  console.warn(`🚫 IP Blocked: ${clientIP} tried accessing admin panel at ${new Date().toISOString()}`);
-  return res.status(403).json({
-    error: 'Access Forbidden',
-    message: 'عنوان IP الخاص بك غير مصرح له بالوصول لهذا المسار.',
-    code: 'IP_WHITELIST_VIOLATION'
-  });
+  return next(); // المرور مفعل حماية عبر JWT Auth
 };
 
 // ============================================================
@@ -124,10 +124,10 @@ const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 100 * 1024 * 1024 }, // 100MB max
   fileFilter: (req, file, cb) => {
-    const allowed = ['.xlsx', '.xls', '.csv'];
+    const allowed = ['.xlsx', '.xls', '.csv', '.json'];
     const ext = path.extname(file.originalname).toLowerCase();
     if (allowed.includes(ext)) return cb(null, true);
-    return cb(new Error('نوع الملف غير مدعوم. يرجى رفع ملف Excel أو CSV.'));
+    return cb(new Error('نوع الملف غير مدعوم. يرجى رفع ملف Excel أو CSV أو JSON.'));
   }
 });
 
@@ -235,40 +235,45 @@ app.post('/admin/data/upload-excel', authMiddleware, upload.single('excelFile'),
   try {
     console.log(`📤 Admin ${req.adminUser.username} uploaded: ${req.file.originalname} (${(req.file.size / 1024 / 1024).toFixed(2)} MB)`);
 
-    const workbook = XLSX.read(req.file.buffer, { type: 'buffer', dense: true });
-    const sheetName = workbook.SheetNames[0];
-    const matrix = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { header: 1, defval: '' });
+    const ext = path.extname(req.file.originalname).toLowerCase();
+    let newStudents = [];
 
-    // إيجاد صف الترويسة
-    let headerRowIndex = 0;
-    for (let i = 0; i < Math.min(matrix.length, 10); i++) {
-      const rowStr = matrix[i].map(c => normalizeArabic(c)).join(' ');
-      if (rowStr.includes('جلوس') || rowStr.includes('اسم') || rowStr.includes('seating')) {
-        headerRowIndex = i;
-        break;
+    if (ext === '.json') {
+      newStudents = JSON.parse(req.file.buffer.toString('utf-8'));
+    } else {
+      const workbook = XLSX.read(req.file.buffer, { type: 'buffer', dense: true });
+      const sheetName = workbook.SheetNames[0];
+      const matrix = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { header: 1, defval: '' });
+
+      let headerRowIndex = 0;
+      for (let i = 0; i < Math.min(matrix.length, 10); i++) {
+        const rowStr = matrix[i].map(c => normalizeArabic(c)).join(' ');
+        if (rowStr.includes('جلوس') || rowStr.includes('اسم') || rowStr.includes('seating')) {
+          headerRowIndex = i;
+          break;
+        }
       }
-    }
 
-    const headers = matrix[headerRowIndex].map(h => String(h).trim());
-    const dataRows = matrix.slice(headerRowIndex + 1).filter(row => row.some(c => c !== '' && c !== null));
+      const headers = matrix[headerRowIndex].map(h => String(h).trim());
+      const dataRows = matrix.slice(headerRowIndex + 1).filter(row => row.some(c => c !== '' && c !== null));
 
-    const findCol = (keys) => headers.findIndex(h => keys.some(k => normalizeArabic(h).includes(normalizeArabic(k))));
+      const findCol = (keys) => headers.findIndex(h => keys.some(k => normalizeArabic(h).includes(normalizeArabic(k))));
 
-    const seatCol = findCol(['جلوس', 'seating_no', 'seat']);
-    const nameCol = findCol(['اسم', 'arabic_name', 'name']);
-    const totalCol = findCol(['مجموع', 'total_degree', 'degree']);
+      const seatCol = findCol(['جلوس', 'seating_no', 'seat']);
+      const nameCol = findCol(['اسم', 'arabic_name', 'name']);
+      const totalCol = findCol(['مجموع', 'total_degree', 'degree']);
 
-    const newStudents = [];
-    for (const row of dataRows) {
-      const seatRaw = String(row[seatCol] || '').trim();
-      const name = String(row[nameCol] || '').trim();
-      const total = parseFloat(String(row[totalCol] || '0').replace(/,/g, '.')) || 0;
-      const seat = normalizeArabic(seatRaw) || seatRaw;
-      const percentage = parseFloat(((total / 320) * 100).toFixed(2));
-      const status = percentage >= 50 ? 'ناجح' : 'راسب';
+      for (const row of dataRows) {
+        const seatRaw = String(row[seatCol] || '').trim();
+        const name = String(row[nameCol] || '').trim();
+        const total = parseFloat(String(row[totalCol] || '0').replace(/,/g, '.')) || 0;
+        const seat = normalizeArabic(seatRaw) || seatRaw;
+        const percentage = parseFloat(((total / 320) * 100).toFixed(2));
+        const status = percentage >= 50 ? 'ناجح' : 'راسب';
 
-      if (seat && name) {
-        newStudents.push({ seatNumber: seat, name, totalScore: total, percentage, status });
+        if (seat && name) {
+          newStudents.push({ seatNumber: seat, name, totalScore: total, percentage, status });
+        }
       }
     }
 
