@@ -25,7 +25,7 @@ export default function AdBanner({ slotId = '1234567890', format = 'auto', class
       <ins
         class="adsbygoogle"
         style={{ display: 'block' }}
-        data-ad-client="ca-pub-XXXXXXXXXXXXXXXX" // معرف ناشر AdSense الخاص بك
+        data-ad-client="ca-pub-8012936811946791" // معرف ناشر AdSense الخاص بك: ca-pub-8012936811946791
         data-ad-slot={slotId}
         data-ad-format={format}
         data-full-width-responsive="true"
