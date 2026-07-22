@@ -94,11 +94,7 @@ const LoginPage = ({ onLogin }) => {
             <ShieldCheck class="w-11 h-11 text-white" />
           </div>
           <h1 class="text-2xl font-black text-white mb-1">لوحة التحكم الإدارية</h1>
-          <p class="text-slate-400 text-sm">نتيجة الثانوية العامة 2026 — Admin Portal</p>
-          <div class="mt-2 inline-flex items-center gap-2 px-3 py-1 bg-red-900/40 border border-red-800 rounded-full text-red-300 text-xs font-bold">
-            <ShieldCheck class="w-3.5 h-3.5" />
-            <span>وصول مقيد بـ IP Whitelist + JWT Auth</span>
-          </div>
+
         </div>
 
         <div class="bg-slate-900/80 backdrop-blur-xl rounded-3xl p-8 border border-slate-700/50 shadow-2xl">
