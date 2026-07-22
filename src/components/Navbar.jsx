@@ -86,10 +86,10 @@ export default function Navbar({ activeTab, setActiveTab, darkMode, setDarkMode 
             <button
               onClick={handleAdminLogin}
               class="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-xs font-black text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 dark:hover:bg-emerald-900 transition-all shadow-sm"
-              title="دخول لوحة تحكم الإدارة"
+              title="تسجيل الدخول"
             >
               <Lock class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-              <span class="hidden sm:inline">دخول الإدارة</span>
+              <span class="hidden sm:inline">تسجيل الدخول</span>
             </button>
 
             {/* Dark Mode Toggle */}
@@ -142,7 +142,7 @@ export default function Navbar({ activeTab, setActiveTab, darkMode, setDarkMode 
             class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-base bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800"
           >
             <Lock class="w-5 h-5 text-emerald-600" />
-            <span>تسجيل دخول الإدارة (Admin)</span>
+            <span>تسجيل الدخول</span>
           </button>
         </div>
       )}

@@ -65,7 +65,7 @@ export default function Footer() {
                   class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-emerald-400 font-bold text-[11px] transition-colors border border-slate-700"
                 >
                   <Lock class="w-3.5 h-3.5" />
-                  <span>بوابة دخول الإدارة (Admin)</span>
+                  <span>تسجيل الدخول</span>
                 </a>
               </div>
             </div>
