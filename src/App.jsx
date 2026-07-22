@@ -5,6 +5,7 @@ import StudentResultCard from './components/StudentResultCard';
 import StatsDashboard from './components/StatsDashboard';
 import AdminDashboard from './components/AdminDashboard';
 import Footer from './components/Footer';
+import LegalModal from './components/LegalModal';
 
 // كشف مسار لوحة التحكم من URL
 const isAdminRoute = () =>
@@ -16,6 +17,7 @@ export default function App() {
   const [isAdmin] = useState(isAdminRoute);
   const [activeTab, setActiveTab] = useState('search');
   const [selectedStudent, setSelectedStudent] = useState(null);
+  const [legalModal, setLegalModal] = useState({ isOpen: false, tab: 'privacy' });
   const [darkMode, setDarkMode] = useState(() => {
     const saved = localStorage.getItem('theme');
     if (saved !== null) {
@@ -35,7 +37,6 @@ export default function App() {
     }
   }, [darkMode]);
 
-  // إذا كان المسار هو لوحة التحكم → عرض Admin Dashboard فقط
   if (isAdmin) {
     return <AdminDashboard />;
   }
@@ -47,12 +48,17 @@ export default function App() {
   };
 
   const handleBackToSearch = () => {
+    setSelectedStudent(null);
     setActiveTab('search');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const handleOpenLegal = (tab = 'privacy') => {
+    setLegalModal({ isOpen: true, tab });
+  };
+
   return (
-    <div class="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300 font-cairo">
+    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300 font-cairo">
       <Navbar
         activeTab={activeTab}
         setActiveTab={(tab) => {
@@ -63,7 +69,7 @@ export default function App() {
         setDarkMode={setDarkMode}
       />
 
-      <main class="flex-1">
+      <main className="flex-1">
         {activeTab === 'search' && (
           <SearchSection onSelectStudent={handleSelectStudent} />
         )}
@@ -73,7 +79,13 @@ export default function App() {
         {activeTab === 'stats' && <StatsDashboard />}
       </main>
 
-      <Footer />
+      <Footer onOpenLegal={handleOpenLegal} />
+
+      <LegalModal
+        isOpen={legalModal.isOpen}
+        initialTab={legalModal.tab}
+        onClose={() => setLegalModal({ isOpen: false, tab: 'privacy' })}
+      />
     </div>
   );
 }
