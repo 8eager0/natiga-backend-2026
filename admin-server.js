@@ -284,7 +284,19 @@ const initSqliteDatabase = () => {
 initSqliteDatabase();
 
 const loadStudentsFromDisk = () => {
-  if (sqliteDb) return; // إذا كان SQLite مفعل وممتلئ، لا تحمّل الملف بالكامل بالـ RAM
+  // إذا SQLite مفعل، حمّل عينة صغيرة من البيانات لأغراض الإحصاء فقط
+  if (sqliteDb) {
+    try {
+      const rows = sqliteDb.prepare('SELECT seatNumber, name, percentage FROM students LIMIT 5000').all();
+      studentsArray = rows;
+      seatMap.clear();
+      for (const st of studentsArray) {
+        if (st.seatNumber) seatMap.set(String(st.seatNumber), st);
+      }
+      console.log(`📊 Loaded stats sample: ${rows.length} rows from SQLite`);
+    } catch(e) { console.warn('Stats sample load error:', e.message); }
+    return;
+  }
   try {
     const candidateGzPaths = [
       path.resolve(__dirname, 'database/students.json.gz'),
@@ -477,10 +489,31 @@ app.post('/admin/data/truncate', authMiddleware, async (req, res) => {
   }
 
   try {
+    // مسح الذاكرة المؤقتة
     studentsArray = [];
     seatMap.clear();
-    fs.writeFileSync(dataPath, JSON.stringify([], null, 0));
 
+    // مسح SQLite إذا كان متاحاً
+    if (sqliteDb) {
+      try {
+        sqliteDb.exec('DELETE FROM students');
+        console.warn('✅ SQLite students table cleared');
+      } catch(e) {
+        console.warn('SQLite truncate error (non-fatal):', e.message);
+      }
+    }
+
+    // مسح ملف JSON إذا كان موجوداً (اختياري)
+    try {
+      if (fs.existsSync(dataPath)) {
+        fs.writeFileSync(dataPath, JSON.stringify([], null, 0));
+      }
+    } catch(e) {
+      // على Render الملف قد يكون read-only - لا مشكلة
+      console.warn('JSON file write skipped (read-only filesystem):', e.message);
+    }
+
+    // مسح Redis
     if (redisClient.isOpen) {
       await redisClient.flushAll();
     }
@@ -489,7 +522,7 @@ app.post('/admin/data/truncate', authMiddleware, async (req, res) => {
 
     return res.json({
       success: true,
-      message: 'تم تفريغ جميع بيانات الطلاب وذاكرة التخزين المؤقت بنجاح.'
+      message: 'تم تفريغ جميع بيانات الطلاب بنجاح. يمكنك الآن رفع ملف البيانات الجديد.'
     });
   } catch (err) {
     return res.status(500).json({ error: `خطأ أثناء الحذف: ${err.message}` });
@@ -789,20 +822,38 @@ app.get('/admin/monitor', authMiddleware, async (req, res) => {
 // [K] إحصائيات لوحة التحكم (Dashboard Overview)
 // ----------------------------------------------------------
 app.get('/admin/dashboard', authMiddleware, (req, res) => {
-  const passCount = studentsArray.filter(s => s.percentage >= 50).length;
-  const failCount = studentsArray.length - passCount;
-  const passRate = studentsArray.length > 0
-    ? ((passCount / studentsArray.length) * 100).toFixed(1)
-    : 0;
+  // استخدم SQLite COUNT الحقيقي بدلاً من حجم studentsArray
+  let totalStudents = studentsArray.length;
+  let passCount = 0;
+  let failCount = 0;
+  let passRate = '0%';
+
+  if (sqliteDb) {
+    try {
+      totalStudents = sqliteDb.prepare('SELECT COUNT(*) as count FROM students').get().count;
+      passCount = sqliteDb.prepare('SELECT COUNT(*) as count FROM students WHERE percentage >= 50').get().count;
+      failCount = totalStudents - passCount;
+      passRate = totalStudents > 0 ? ((passCount / totalStudents) * 100).toFixed(1) + '%' : '0%';
+    } catch(e) {
+      totalStudents = studentsArray.length;
+      passCount = studentsArray.filter(s => (s.percentage || 0) >= 50).length;
+      failCount = totalStudents - passCount;
+      passRate = totalStudents > 0 ? ((passCount / totalStudents) * 100).toFixed(1) + '%' : '0%';
+    }
+  } else {
+    passCount = studentsArray.filter(s => (s.percentage || 0) >= 50).length;
+    failCount = totalStudents - passCount;
+    passRate = totalStudents > 0 ? ((passCount / totalStudents) * 100).toFixed(1) + '%' : '0%';
+  }
 
   const recentLeads = leadsDB.slice(-10).reverse();
 
   return res.json({
     overview: {
-      totalStudents: studentsArray.length,
+      totalStudents,
       passCount,
       failCount,
-      passRate: `${passRate}%`,
+      passRate,
       totalLeads: leadsDB.length,
       siteStatus: siteSettings.site_status,
       adsEnabled: siteSettings.ads_enabled
