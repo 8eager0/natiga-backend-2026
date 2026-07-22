@@ -172,19 +172,26 @@ let siteSettings = {
 // =============================
 // تحميل البيانات في الذاكرة
 // =============================
-const gzPath = path.resolve('database/students.json.gz');
-
 const loadStudentsFromDisk = () => {
   try {
-    if (fs.existsSync(gzPath)) {
-      const buffer = fs.readFileSync(gzPath);
+    const candidateGzPaths = [
+      path.resolve('database/students.json.gz'),
+      path.resolve('src/data/students.json.gz'),
+      path.join(process.cwd(), 'database/students.json.gz'),
+      path.join(process.cwd(), 'src/data/students.json.gz')
+    ];
+
+    let foundGz = candidateGzPaths.find(p => fs.existsSync(p));
+
+    if (foundGz) {
+      const buffer = fs.readFileSync(foundGz);
       const decompressed = zlib.gunzipSync(buffer);
       studentsArray = JSON.parse(decompressed.toString('utf-8'));
       seatMap.clear();
       for (const st of studentsArray) {
         if (st.seatNumber) seatMap.set(normalizeArabic(st.seatNumber), st);
       }
-      console.log(`✅ Loaded ${studentsArray.length.toLocaleString('ar-EG')} students from database/students.json.gz into RAM`);
+      console.log(`✅ Loaded ${studentsArray.length.toLocaleString('ar-EG')} students from ${foundGz} into RAM`);
     } else if (fs.existsSync(dataPath)) {
       studentsArray = JSON.parse(fs.readFileSync(dataPath, 'utf-8'));
       seatMap.clear();
