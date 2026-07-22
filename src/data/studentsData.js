@@ -37,13 +37,15 @@ export const calculateStudentStats = (student) => {
   };
 };
 
+import { API_BASE_URL } from '../config';
+
 // Async API search against 810,980 RAM Indexed backend
 export const searchStudentsAsync = async (query, searchType = 'seatNumber', customStudents = []) => {
   const normQuery = normalizeArabic(query);
   if (!normQuery) return [];
 
   try {
-    const res = await fetch(`http://localhost:4000/api/search?q=${encodeURIComponent(normQuery)}&type=${searchType}`);
+    const res = await fetch(`${API_BASE_URL}/api/search?q=${encodeURIComponent(normQuery)}&type=${searchType}`);
     if (res.ok) {
       const data = await res.json();
       if (Array.isArray(data) && data.length > 0) {

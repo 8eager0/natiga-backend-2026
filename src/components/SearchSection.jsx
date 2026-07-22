@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Hash, User, MapPin, BookOpen, Sparkles, AlertCircle, ArrowLeft, CheckCircle, FileSpreadsheet, Database } from 'lucide-react';
 import { BRANCHES, GOVERNORATES, searchStudentsAsync } from '../data/studentsData';
+import { API_BASE_URL } from '../config';
 
 export default function SearchSection({ onSelectStudent, customStudents = [], onOpenExcelModal }) {
   const [searchType, setSearchType] = useState('seatNumber'); // 'seatNumber' | 'name'
@@ -12,7 +13,7 @@ export default function SearchSection({ onSelectStudent, customStudents = [], on
 
   // Check backend connection on mount
   useEffect(() => {
-    fetch('http://localhost:4000/api/info')
+    fetch(`${API_BASE_URL}/api/info`)
       .then(res => res.json())
       .then(data => {
         if (data.totalCount) setTotalDbCount(data.totalCount);

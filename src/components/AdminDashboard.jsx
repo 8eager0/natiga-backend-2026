@@ -7,7 +7,9 @@ import {
   Search, Menu, X
 } from 'lucide-react';
 
-const ADMIN_API = 'http://localhost:4000';
+import { API_BASE_URL } from '../config';
+
+const ADMIN_API = API_BASE_URL;
 
 // ============================================================
 // Utility: توليد رأس JWT للطلبات المصادق عليها

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Send, CheckCircle2, GraduationCap, Phone, User, Sparkles } from 'lucide-react';
+import { API_BASE_URL } from '../config';
 
 export default function LeadGenForm({ studentData }) {
   const [formData, setFormData] = useState({
@@ -28,7 +29,7 @@ export default function LeadGenForm({ studentData }) {
         preferredBranch: formData.preferredBranch,
       };
 
-      const res = await fetch('http://localhost:4000/api/leads', {
+      const res = await fetch(`${API_BASE_URL}/api/leads`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
