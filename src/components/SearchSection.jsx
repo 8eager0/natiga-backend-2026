@@ -160,9 +160,18 @@ export default function SearchSection({ onSelectStudent, customStudents = [], on
         </form>
       </div>
 
+      {/* Loading Indicator during async search */}
+      {isSearching && (
+        <div className="mt-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 text-center shadow-lg">
+          <div className="w-12 h-12 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <h3 className="text-lg font-black text-slate-900 dark:text-white mb-1">جاري استدعاء النتيجة المعتمدة...</h3>
+          <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">جاري الاستعلام في قواعد بيانات 810,000 طالب وطالبة</p>
+        </div>
+      )}
+
       {/* Results List View (when searching by name or multiple matches) */}
-      {hasSearched && (
-        <div class="mt-8">
+      {hasSearched && !isSearching && (
+        <div className="mt-8">
           {results.length === 0 ? (
             <div class="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/80 rounded-2xl p-6 text-center">
               <AlertCircle class="w-10 h-10 text-amber-500 mx-auto mb-3" />
