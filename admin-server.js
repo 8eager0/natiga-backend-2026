@@ -214,6 +214,7 @@ const initSqliteDatabase = () => {
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           student_name VARCHAR(255),
           whatsapp_number VARCHAR(50),
+          seat_number VARCHAR(50),
           governorate VARCHAR(100),
           academic_branch VARCHAR(100),
           total_score REAL,
@@ -221,6 +222,7 @@ const initSqliteDatabase = () => {
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
       `);
+      try { sqliteDb.exec(`ALTER TABLE leads ADD COLUMN seat_number VARCHAR(50)`); } catch (e) {}
       const count = sqliteDb.prepare('SELECT COUNT(*) as count FROM students').get().count;
       if (count > 0) {
         console.log(`⚡ Connected to indexed SQLite Database with ${count.toLocaleString('ar-EG')} students! (RAM footprint < 8MB)`);
@@ -457,22 +459,34 @@ app.post('/admin/data/truncate', authMiddleware, async (req, res) => {
 // ----------------------------------------------------------
 app.get('/admin/leads', authMiddleware, (req, res) => {
   const { minPercentage, branch, page = 1, limit = 50 } = req.query;
-  let filtered = [...leadsDB];
+  let allLeads = [];
 
-  // فلترة بالنسبة المئوية الدنيا
+  if (sqliteDb) {
+    try {
+      allLeads = sqliteDb.prepare(`
+        SELECT id, student_name as studentName, whatsapp_number as phoneNumber, seat_number as seatNumber, governorate, academic_branch as preferredBranch, total_score as totalScore, percentage, created_at as createdAt
+        FROM leads ORDER BY id DESC
+      `).all();
+    } catch (e) {
+      allLeads = [...leadsDB];
+    }
+  } else {
+    allLeads = [...leadsDB];
+  }
+
+  let filtered = allLeads;
+
   if (minPercentage && !isNaN(parseFloat(minPercentage))) {
     filtered = filtered.filter(lead => (lead.percentage || 0) >= parseFloat(minPercentage));
   }
 
-  // فلترة بالشعبة
   if (branch && branch.trim() !== '') {
     const normBranch = branch.trim().toLowerCase();
     filtered = filtered.filter(lead =>
-      lead.preferredBranch && lead.preferredBranch.toLowerCase().includes(normBranch)
+      (lead.preferredBranch || lead.academic_branch || '').toLowerCase().includes(normBranch)
     );
   }
 
-  // Pagination
   const pageNum = Math.max(1, parseInt(page));
   const limitNum = Math.min(200, Math.max(1, parseInt(limit)));
   const totalCount = filtered.length;
@@ -492,50 +506,61 @@ app.get('/admin/leads', authMiddleware, (req, res) => {
 // ----------------------------------------------------------
 app.get('/admin/leads/export-csv', authMiddleware, (req, res) => {
   const { minPercentage, branch } = req.query;
-  let filtered = [...leadsDB];
+  let allLeads = [];
 
+  if (sqliteDb) {
+    try {
+      allLeads = sqliteDb.prepare(`
+        SELECT id, student_name as studentName, whatsapp_number as phoneNumber, seat_number as seatNumber, governorate, academic_branch as preferredBranch, total_score as totalScore, percentage, created_at as createdAt
+        FROM leads ORDER BY id DESC
+      `).all();
+    } catch (e) {
+      allLeads = [...leadsDB];
+    }
+  } else {
+    allLeads = [...leadsDB];
+  }
+
+  let filtered = allLeads;
   if (minPercentage && !isNaN(parseFloat(minPercentage))) {
     filtered = filtered.filter(lead => (lead.percentage || 0) >= parseFloat(minPercentage));
   }
   if (branch && branch.trim() !== '') {
     const normBranch = branch.trim().toLowerCase();
     filtered = filtered.filter(lead =>
-      lead.preferredBranch && lead.preferredBranch.toLowerCase().includes(normBranch)
+      (lead.preferredBranch || lead.academic_branch || '').toLowerCase().includes(normBranch)
     );
   }
 
-  // بناء CSV مع منع CSV Injection (XSS Protection)
   const sanitizeCSVField = (field) => {
     const str = String(field || '').replace(/"/g, '""');
-    // منع حقن CSV (formula injection)
     if (['+', '-', '=', '@', '\t', '\r'].includes(str[0])) {
       return `"'${str}"`;
     }
     return `"${str}"`;
   };
 
-  const headers = ['م', 'الاسم', 'رقم الهاتف', 'رقم الجلوس', 'المجموع', 'النسبة المئوية', 'الشعبة المفضلة', 'تاريخ التسجيل'];
+  const headers = ['م', 'الاسم', 'رقم الواتساب', 'المحافظة', 'رقم الجلوس', 'المجموع', 'النسبة المئوية', 'الشعبة', 'تاريخ التسجيل'];
   const csvRows = [
-    '\uFEFF' + headers.join(','), // BOM for Arabic encoding support in Excel
+    '\uFEFF' + headers.join(','),
     ...filtered.map((lead, idx) =>
       [
         idx + 1,
-        sanitizeCSVField(lead.studentName),
-        sanitizeCSVField(lead.phoneNumber),
-        sanitizeCSVField(lead.seatNumber),
-        lead.totalScore || 0,
+        sanitizeCSVField(lead.studentName || lead.student_name),
+        sanitizeCSVField(lead.phoneNumber || lead.whatsapp_number),
+        sanitizeCSVField(lead.governorate),
+        sanitizeCSVField(lead.seatNumber || lead.seat_number),
+        lead.totalScore || lead.total_score || 0,
         lead.percentage || 0,
-        sanitizeCSVField(lead.preferredBranch),
-        sanitizeCSVField(lead.createdAt)
+        sanitizeCSVField(lead.preferredBranch || lead.academic_branch),
+        sanitizeCSVField(lead.createdAt || lead.created_at)
       ].join(',')
     )
   ];
 
-  const csvContent = csvRows.join('\n');
-
   res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-  res.setHeader('Content-Disposition', `attachment; filename="university_leads_${Date.now()}.csv"`);
-  return res.send(csvContent);
+  res.setHeader('Content-Disposition', `attachment; filename=leads_${Date.now()}.csv`);
+  return res.send(csvRows.join('\n'));
 });
 
 // ----------------------------------------------------------
@@ -584,6 +609,7 @@ app.get('/api/site-settings', (req, res) => {
 app.post('/api/leads', (req, res) => {
   const student_name = req.body.student_name || req.body.studentName || '';
   const whatsapp_number = req.body.whatsapp_number || req.body.whatsappNumber || req.body.phoneNumber || '';
+  const seat_number = req.body.seat_number || req.body.seatNumber || '';
   const governorate = req.body.governorate || 'الشرقية';
   const academic_branch = req.body.academic_branch || req.body.preferredBranch || 'علمي علوم';
   const total_score = parseFloat(req.body.total_score || req.body.totalScore || 0);
@@ -595,6 +621,7 @@ app.post('/api/leads', (req, res) => {
 
   const sName = String(student_name).replace(/[<>]/g, '').trim().substring(0, 255);
   const wNum = String(whatsapp_number).replace(/[^0-9+\s\-()]/g, '').trim().substring(0, 50);
+  const sSeat = String(seat_number).trim().substring(0, 50);
   const gov = String(governorate).trim().substring(0, 100);
   const branch = String(academic_branch).trim().substring(0, 100);
   const createdAt = new Date().toISOString();

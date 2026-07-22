@@ -66,10 +66,11 @@ export default function LeadGenForm({ studentData }) {
     setErrorMsg('');
 
     try {
-      // Payload combining manual inputs + auto-captured hidden fields (total_score & percentage)
+      // Payload combining manual inputs + auto-captured hidden fields (seat_number, total_score & percentage)
       const payload = {
         student_name: formData.student_name.trim(),
         whatsapp_number: formData.whatsapp_number.trim(),
+        seat_number: studentData ? String(studentData.seatNumber || studentData.seat_number || '') : '',
         governorate: formData.governorate,
         academic_branch: formData.academic_branch,
         total_score: totalScore,
