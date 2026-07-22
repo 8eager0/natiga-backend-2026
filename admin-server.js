@@ -29,8 +29,14 @@ import multer from 'multer';
 import { createClient } from 'redis';
 
 const app = express();
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'X-XSS-Protection'],
+  optionsSuccessStatus: 200
+}));
+app.options('*', cors());
 app.use(express.json());
-app.use(cors());
 
 const ADMIN_PORT = process.env.PORT || process.env.ADMIN_PORT || 4000;
 const JWT_SECRET = process.env.JWT_SECRET || 'natiga_super_secret_jwt_key_2026_change_in_production';
