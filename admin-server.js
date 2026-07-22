@@ -210,19 +210,25 @@ const initSqliteDatabase = () => {
     if (foundSqlite && fs.existsSync(foundSqlite)) {
       sqliteDb = new DatabaseSync(foundSqlite);
       const count = sqliteDb.prepare('SELECT COUNT(*) as count FROM students').get().count;
-      console.log(`⚡ Connected to indexed SQLite Database with ${count.toLocaleString('ar-EG')} students! (RAM footprint < 8MB)`);
+      if (count > 0) {
+        console.log(`⚡ Connected to indexed SQLite Database with ${count.toLocaleString('ar-EG')} students! (RAM footprint < 8MB)`);
+      } else {
+        console.warn('⚠️ SQLite Database contains 0 rows. Falling back to JSON dataset.');
+        sqliteDb = null;
+      }
     } else {
       console.warn('⚠️ SQLite DB not found in candidate paths:', candidateSqliteGz);
     }
   } catch (err) {
     console.error('Error initializing SQLite DB:', err);
+    sqliteDb = null;
   }
 };
 
 initSqliteDatabase();
 
 const loadStudentsFromDisk = () => {
-  if (sqliteDb) return; // إذا كان SQLite مفعل، لا تحمّل الملف بالكامل بالـ RAM لترشيد الاستهلاك
+  if (sqliteDb) return; // إذا كان SQLite مفعل وممتلئ، لا تحمّل الملف بالكامل بالـ RAM
   try {
     const candidateGzPaths = [
       path.resolve(__dirname, 'database/students.json.gz'),
