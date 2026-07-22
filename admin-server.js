@@ -28,6 +28,7 @@ import bcrypt from 'bcryptjs';
 import rateLimit from 'express-rate-limit';
 import multer from 'multer';
 import { createClient } from 'redis';
+import { DatabaseSync } from 'node:sqlite';
 
 const app = express();
 app.use(cors({
@@ -172,7 +173,50 @@ let siteSettings = {
 // =============================
 // تحميل البيانات في الذاكرة
 // =============================
+let sqliteDb = null;
+
+const initSqliteDatabase = () => {
+  try {
+    const candidateSqliteGz = [
+      path.resolve('database/natiga.sqlite.gz'),
+      path.join(process.cwd(), 'database/natiga.sqlite.gz'),
+      path.resolve('src/data/natiga.sqlite.gz')
+    ];
+    const candidateSqlite = [
+      path.resolve('database/natiga.sqlite'),
+      path.join(process.cwd(), 'database/natiga.sqlite')
+    ];
+
+    let foundSqlite = candidateSqlite.find(p => fs.existsSync(p));
+    let foundGz = candidateSqliteGz.find(p => fs.existsSync(p));
+
+    if (!foundSqlite && foundGz) {
+      console.log('⚡ Decompressing SQLite database (46.67 MB)...');
+      const gzBuffer = fs.readFileSync(foundGz);
+      const decompressed = zlib.gunzipSync(gzBuffer);
+      const targetDbPath = candidateSqlite[0];
+      if (!fs.existsSync(path.dirname(targetDbPath))) {
+        fs.mkdirSync(path.dirname(targetDbPath), { recursive: true });
+      }
+      fs.writeFileSync(targetDbPath, decompressed);
+      foundSqlite = targetDbPath;
+      console.log('✅ SQLite database decompressed successfully!');
+    }
+
+    if (foundSqlite && fs.existsSync(foundSqlite)) {
+      sqliteDb = new DatabaseSync(foundSqlite);
+      const count = sqliteDb.prepare('SELECT COUNT(*) as count FROM students').get().count;
+      console.log(`⚡ Connected to indexed SQLite Database with ${count.toLocaleString('ar-EG')} students! (RAM footprint < 8MB)`);
+    }
+  } catch (err) {
+    console.error('Error initializing SQLite DB:', err.message);
+  }
+};
+
+initSqliteDatabase();
+
 const loadStudentsFromDisk = () => {
+  if (sqliteDb) return; // إذا كان SQLite مفعل، لا تحمّل الملف بالكامل بالـ RAM لترشيد الاستهلاك
   try {
     const candidateGzPaths = [
       path.resolve('database/students.json.gz'),
@@ -659,7 +703,17 @@ app.get('/api/search', searchLimiter, async (req, res) => {
   } catch (e) {}
 
   let results = [];
-  if (searchType === 'seatNumber') {
+  if (sqliteDb) {
+    try {
+      if (searchType === 'seatNumber') {
+        results = sqliteDb.prepare('SELECT seat_number as seatNumber, name, total_score as totalScore, percentage, status, branch, governorate, school FROM students WHERE seat_number = ? OR seat_number LIKE ? LIMIT 30').all(normQ, `%${normQ}%`);
+      } else {
+        results = sqliteDb.prepare('SELECT seat_number as seatNumber, name, total_score as totalScore, percentage, status, branch, governorate, school FROM students WHERE name LIKE ? LIMIT 30').all(`%${normQ}%`);
+      }
+    } catch (e) {
+      console.error('SQLite query error:', e.message);
+    }
+  } else if (searchType === 'seatNumber') {
     const exact = seatMap.get(normQ);
     if (exact) results = [exact];
     else {
@@ -690,8 +744,14 @@ app.get('/api/search', searchLimiter, async (req, res) => {
 });
 
 app.get('/api/info', (req, res) => {
+  let totalCount = studentsArray.length;
+  if (sqliteDb) {
+    try {
+      totalCount = sqliteDb.prepare('SELECT COUNT(*) as count FROM students').get().count;
+    } catch (e) {}
+  }
   return res.json({
-    totalCount: studentsArray.length,
+    totalCount,
     maxPossibleScore: 320,
     status: 'online',
     siteStatus: siteSettings.site_status
@@ -702,6 +762,35 @@ app.get('/api/info', (req, res) => {
 // [M] إحصائيات المجاميع الحقيقية من البيانات المحملة
 // ----------------------------------------------------------
 app.get('/api/stats', (req, res) => {
+  if (sqliteDb) {
+    try {
+      const totalStudents = sqliteDb.prepare('SELECT COUNT(*) as count FROM students').get().count;
+      const passCount = sqliteDb.prepare('SELECT COUNT(*) as count FROM students WHERE percentage >= 50').get().count;
+      const failCount = totalStudents - passCount;
+      const overallPassRate = totalStudents > 0 ? ((passCount / totalStudents) * 100).toFixed(1) + '%' : '0%';
+
+      const bucketDefs = [
+        { range: 'أكثر من 95% (مجموع 304+)', min: 95, max: 101, color: 'bg-emerald-600' },
+        { range: '90% - 95% (مجموع 288-303)', min: 90, max: 95, color: 'bg-emerald-500' },
+        { range: '80% - 90% (مجموع 256-287)', min: 80, max: 90, color: 'bg-teal-500' },
+        { range: '70% - 80% (مجموع 224-255)', min: 70, max: 80, color: 'bg-blue-500' },
+        { range: '60% - 70% (مجموع 192-223)', min: 60, max: 70, color: 'bg-indigo-500' },
+        { range: '50% - 60% (مجموع 160-191)', min: 50, max: 60, color: 'bg-amber-500' },
+        { range: 'أقل من 50% (راسب، أقل من 160)', min: 0, max: 50, color: 'bg-red-500' },
+      ];
+
+      const buckets = bucketDefs.map(b => {
+        const count = sqliteDb.prepare('SELECT COUNT(*) as count FROM students WHERE percentage >= ? AND percentage < ?').get(b.min, b.max).count;
+        const percent = totalStudents > 0 ? ((count / totalStudents) * 100).toFixed(1) + '%' : '0%';
+        return { range: b.range, count: count.toLocaleString('ar-EG'), percent, color: b.color };
+      });
+
+      return res.json({ totalStudents, passCount, failCount, overallPassRate, buckets });
+    } catch (e) {
+      console.error('Error computing sqlite stats:', e.message);
+    }
+  }
+
   if (studentsArray.length === 0) {
     return res.json({
       totalStudents: 0,
