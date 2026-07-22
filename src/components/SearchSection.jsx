@@ -48,13 +48,13 @@ export default function SearchSection({ onSelectStudent, customStudents = [], on
       <div class="text-center mb-8">
         <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-sm font-semibold mb-4">
           <Sparkles class="w-4 h-4 text-emerald-500" />
-          <span>استعلام فوري ومعتمد لنتائج امتحانات الثانوية العامة 2025</span>
+          <span>استعلام فوري ومعتمد لنتائج امتحانات الثانوية العامة 2026</span>
         </div>
-        <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 dark:text-white tracking-tight mb-3 leading-snug">
-          ابحث عن نتيجتك <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-600">برقم الجلوس</span> أو <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-amber-500">الاسم</span>
-        </h2>
+        <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 dark:text-white tracking-tight mb-3 leading-snug">
+          نتيجة الثانوية العامة 2026
+        </h1>
         <p class="text-base sm:text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto mb-4">
-          أدخل رقم الجلوس أو اسم الطالب للحصول على النتيجة فوراً (المجموع من 320 درجة).
+          استعلم الآن عن نتيجتك <span class="font-black text-emerald-600 dark:text-emerald-400">برقم الجلوس</span> أو <span class="font-black text-amber-600 dark:text-amber-400">الاسم</span> فوراً (المجموع من 320 درجة).
         </p>
 
         {/* Adsterra Top Leaderboard Ad Unit */}
