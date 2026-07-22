@@ -183,6 +183,7 @@ const initSqliteDatabase = () => {
       path.resolve('src/data/natiga.sqlite.gz')
     ];
     const candidateSqlite = [
+      path.join(os.tmpdir(), 'natiga.sqlite'),
       path.resolve('database/natiga.sqlite'),
       path.join(process.cwd(), 'database/natiga.sqlite')
     ];
@@ -191,25 +192,24 @@ const initSqliteDatabase = () => {
     let foundGz = candidateSqliteGz.find(p => fs.existsSync(p));
 
     if (!foundSqlite && foundGz) {
-      console.log('⚡ Decompressing SQLite database (46.67 MB)...');
+      console.log(`⚡ Decompressing SQLite database (${foundGz})...`);
       const gzBuffer = fs.readFileSync(foundGz);
       const decompressed = zlib.gunzipSync(gzBuffer);
       const targetDbPath = candidateSqlite[0];
-      if (!fs.existsSync(path.dirname(targetDbPath))) {
-        fs.mkdirSync(path.dirname(targetDbPath), { recursive: true });
-      }
       fs.writeFileSync(targetDbPath, decompressed);
       foundSqlite = targetDbPath;
-      console.log('✅ SQLite database decompressed successfully!');
+      console.log(`✅ SQLite database decompressed successfully to ${targetDbPath}!`);
     }
 
     if (foundSqlite && fs.existsSync(foundSqlite)) {
       sqliteDb = new DatabaseSync(foundSqlite);
       const count = sqliteDb.prepare('SELECT COUNT(*) as count FROM students').get().count;
       console.log(`⚡ Connected to indexed SQLite Database with ${count.toLocaleString('ar-EG')} students! (RAM footprint < 8MB)`);
+    } else {
+      console.warn('⚠️ SQLite DB not found in candidate paths:', candidateSqliteGz);
     }
   } catch (err) {
-    console.error('Error initializing SQLite DB:', err.message);
+    console.error('Error initializing SQLite DB:', err);
   }
 };
 
