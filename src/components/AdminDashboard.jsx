@@ -161,9 +161,7 @@ const LoginPage = ({ onLogin }) => {
             </button>
           </form>
 
-          <p class="text-center text-xs text-slate-600 mt-4 font-mono">
-            Default: admin / Admin@2026!
-          </p>
+
         </div>
       </div>
     </div>
