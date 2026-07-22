@@ -33,6 +33,8 @@ import rateLimit from 'express-rate-limit';
 import multer from 'multer';
 import { createClient } from 'redis';
 import { DatabaseSync } from 'node:sqlite';
+import pkg from 'pg';
+const { Pool } = pkg;
 
 const app = express();
 app.use(cors({
@@ -162,8 +164,8 @@ const normalizeArabic = (text) => {
     .toLowerCase();
 };
 
-// إعداد قاعدة البيانات في الذاكرة
-const leadsDB = []; // يتم حقن هذا من /api/leads
+// إعداد قاعدة البيانات في الذاكرة (fallback)
+const leadsDB = [];
 let leadsIdCounter = 1;
 
 // إعدادات الموقع الافتراضية
@@ -172,6 +174,46 @@ let siteSettings = {
   ads_enabled: true,
   maintenance_message: 'الموقع تحت الصيانة. نعود قريباً!',
   updated_at: new Date().toISOString()
+};
+
+// ============================================================
+// Supabase PostgreSQL Pool (بيانات دائمة لا تُمحى)
+// ============================================================
+let pgPool = null;
+
+const initSupabasePool = async () => {
+  const dbUrl = process.env.SUPABASE_DB_URL;
+  if (!dbUrl) {
+    console.warn('⚠️  SUPABASE_DB_URL غير موجود - سيتم استخدام الذاكرة المؤقتة فقط');
+    return;
+  }
+  try {
+    pgPool = new Pool({
+      connectionString: dbUrl,
+      ssl: { rejectUnauthorized: false },
+      max: 5,
+      idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 5000,
+    });
+
+    await pgPool.query(`
+      CREATE TABLE IF NOT EXISTS leads (
+        id SERIAL PRIMARY KEY,
+        student_name VARCHAR(255),
+        whatsapp_number VARCHAR(50),
+        seat_number VARCHAR(50),
+        governorate VARCHAR(100),
+        academic_branch VARCHAR(100),
+        total_score NUMERIC,
+        percentage NUMERIC,
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      )
+    `);
+    console.log('✅ Supabase PostgreSQL متصل - جدول leads جاهز');
+  } catch (err) {
+    console.error('❌ خطأ في الاتصال بـ Supabase:', err.message);
+    pgPool = null;
+  }
 };
 
 // =============================
@@ -457,29 +499,33 @@ app.post('/admin/data/truncate', authMiddleware, async (req, res) => {
 // ----------------------------------------------------------
 // [E] استعلام بيانات Leads مع فلترة
 // ----------------------------------------------------------
-app.get('/admin/leads', authMiddleware, (req, res) => {
+app.get('/admin/leads', authMiddleware, async (req, res) => {
   const { minPercentage, branch, page = 1, limit = 50 } = req.query;
   let allLeads = [];
 
-  if (sqliteDb) {
+  // ✅ أولوية Supabase
+  if (pgPool) {
     try {
-      allLeads = sqliteDb.prepare(`
-        SELECT id, student_name as studentName, whatsapp_number as phoneNumber, seat_number as seatNumber, governorate, academic_branch as preferredBranch, total_score as totalScore, percentage, created_at as createdAt
-        FROM leads ORDER BY id DESC
-      `).all();
+      const result = await pgPool.query(
+        `SELECT id, student_name as "studentName", whatsapp_number as "phoneNumber", seat_number as "seatNumber", governorate, academic_branch as "preferredBranch", total_score as "totalScore", percentage, created_at as "createdAt" FROM leads ORDER BY id DESC`
+      );
+      allLeads = result.rows;
     } catch (e) {
-      allLeads = [...leadsDB];
+      console.error('Supabase leads fetch error:', e.message);
+      allLeads = sqliteDb ? sqliteDb.prepare('SELECT id, student_name as studentName, whatsapp_number as phoneNumber, seat_number as seatNumber, governorate, academic_branch as preferredBranch, total_score as totalScore, percentage, created_at as createdAt FROM leads ORDER BY id DESC').all() : [...leadsDB];
     }
+  } else if (sqliteDb) {
+    try {
+      allLeads = sqliteDb.prepare('SELECT id, student_name as studentName, whatsapp_number as phoneNumber, seat_number as seatNumber, governorate, academic_branch as preferredBranch, total_score as totalScore, percentage, created_at as createdAt FROM leads ORDER BY id DESC').all();
+    } catch (e) { allLeads = [...leadsDB]; }
   } else {
     allLeads = [...leadsDB];
   }
 
   let filtered = allLeads;
-
   if (minPercentage && !isNaN(parseFloat(minPercentage))) {
-    filtered = filtered.filter(lead => (lead.percentage || 0) >= parseFloat(minPercentage));
+    filtered = filtered.filter(lead => parseFloat(lead.percentage || 0) >= parseFloat(minPercentage));
   }
-
   if (branch && branch.trim() !== '') {
     const normBranch = branch.trim().toLowerCase();
     filtered = filtered.filter(lead =>
@@ -492,38 +538,38 @@ app.get('/admin/leads', authMiddleware, (req, res) => {
   const totalCount = filtered.length;
   const paginated = filtered.slice((pageNum - 1) * limitNum, pageNum * limitNum);
 
-  return res.json({
-    data: paginated,
-    totalCount,
-    page: pageNum,
-    limit: limitNum,
-    totalPages: Math.ceil(totalCount / limitNum)
-  });
+  return res.json({ data: paginated, totalCount, page: pageNum, limit: limitNum, totalPages: Math.ceil(totalCount / limitNum) });
 });
 
 // ----------------------------------------------------------
 // [F] تصدير Leads إلى CSV
 // ----------------------------------------------------------
-app.get('/admin/leads/export-csv', authMiddleware, (req, res) => {
+app.get('/admin/leads/export-csv', authMiddleware, async (req, res) => {
   const { minPercentage, branch } = req.query;
   let allLeads = [];
 
-  if (sqliteDb) {
+  // ✅ أولوية Supabase
+  if (pgPool) {
     try {
-      allLeads = sqliteDb.prepare(`
-        SELECT id, student_name as studentName, whatsapp_number as phoneNumber, seat_number as seatNumber, governorate, academic_branch as preferredBranch, total_score as totalScore, percentage, created_at as createdAt
-        FROM leads ORDER BY id DESC
-      `).all();
+      const result = await pgPool.query(
+        `SELECT id, student_name as "studentName", whatsapp_number as "phoneNumber", seat_number as "seatNumber", governorate, academic_branch as "preferredBranch", total_score as "totalScore", percentage, created_at as "createdAt" FROM leads ORDER BY id DESC`
+      );
+      allLeads = result.rows;
     } catch (e) {
-      allLeads = [...leadsDB];
+      console.error('Supabase CSV export error:', e.message);
+      allLeads = sqliteDb ? sqliteDb.prepare('SELECT id, student_name as studentName, whatsapp_number as phoneNumber, seat_number as seatNumber, governorate, academic_branch as preferredBranch, total_score as totalScore, percentage, created_at as createdAt FROM leads ORDER BY id DESC').all() : [...leadsDB];
     }
+  } else if (sqliteDb) {
+    try {
+      allLeads = sqliteDb.prepare('SELECT id, student_name as studentName, whatsapp_number as phoneNumber, seat_number as seatNumber, governorate, academic_branch as preferredBranch, total_score as totalScore, percentage, created_at as createdAt FROM leads ORDER BY id DESC').all();
+    } catch (e) { allLeads = [...leadsDB]; }
   } else {
     allLeads = [...leadsDB];
   }
 
   let filtered = allLeads;
   if (minPercentage && !isNaN(parseFloat(minPercentage))) {
-    filtered = filtered.filter(lead => (lead.percentage || 0) >= parseFloat(minPercentage));
+    filtered = filtered.filter(lead => parseFloat(lead.percentage || 0) >= parseFloat(minPercentage));
   }
   if (branch && branch.trim() !== '') {
     const normBranch = branch.trim().toLowerCase();
@@ -606,7 +652,7 @@ app.get('/api/site-settings', (req, res) => {
 // ----------------------------------------------------------
 // [I] نقطة نهاية استلام Leads من الموقع الرئيسي
 // ----------------------------------------------------------
-app.post('/api/leads', (req, res) => {
+app.post('/api/leads', async (req, res) => {
   const student_name = req.body.student_name || req.body.studentName || '';
   const whatsapp_number = req.body.whatsapp_number || req.body.whatsappNumber || req.body.phoneNumber || '';
   const seat_number = req.body.seat_number || req.body.seatNumber || '';
@@ -627,36 +673,41 @@ app.post('/api/leads', (req, res) => {
   const createdAt = new Date().toISOString();
   let leadId = leadsIdCounter++;
 
-  if (sqliteDb) {
+  // ✅ الأولوية: Supabase PostgreSQL (دائم لا يُمحى)
+  if (pgPool) {
+    try {
+      const result = await pgPool.query(
+        `INSERT INTO leads (student_name, whatsapp_number, seat_number, governorate, academic_branch, total_score, percentage, created_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`,
+        [sName, wNum, sSeat, gov, branch, total_score, percentage, createdAt]
+      );
+      leadId = result.rows[0]?.id || leadId;
+      console.log(`✅ Lead saved to Supabase: ID=${leadId}`);
+    } catch (err) {
+      console.error('❌ Supabase insert error:', err.message);
+      // Fallback to SQLite
+      if (sqliteDb) {
+        try {
+          const stmt = sqliteDb.prepare(`
+            INSERT INTO leads (student_name, whatsapp_number, seat_number, governorate, academic_branch, total_score, percentage, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)`);
+          const r = stmt.run(sName, wNum, sSeat, gov, branch, total_score, percentage, createdAt);
+          if (r?.lastInsertRowid) leadId = Number(r.lastInsertRowid);
+        } catch (e) { console.error('SQLite fallback error:', e.message); }
+      }
+    }
+  } else if (sqliteDb) {
+    // Fallback: SQLite فقط
     try {
       const stmt = sqliteDb.prepare(`
         INSERT INTO leads (student_name, whatsapp_number, seat_number, governorate, academic_branch, total_score, percentage, created_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-      `);
-      const result = stmt.run(sName, wNum, sSeat, gov, branch, total_score, percentage, createdAt);
-      if (result && result.lastInsertRowid) {
-        leadId = Number(result.lastInsertRowid);
-      }
-    } catch (err) {
-      console.error('SQLite insert lead error:', err.message);
-    }
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`);
+      const r = stmt.run(sName, wNum, sSeat, gov, branch, total_score, percentage, createdAt);
+      if (r?.lastInsertRowid) leadId = Number(r.lastInsertRowid);
+    } catch (err) { console.error('SQLite insert lead error:', err.message); }
   }
 
-  const lead = {
-    id: leadId,
-    studentName: sName,
-    phoneNumber: wNum,
-    whatsapp_number: wNum,
-    governorate: gov,
-    academicBranch: branch,
-    academic_branch: branch,
-    totalScore: total_score,
-    total_score: total_score,
-    percentage: percentage,
-    createdAt: createdAt
-  };
-
-  leadsDB.push(lead);
+  leadsDB.push({ id: leadId, studentName: sName, student_name: sName, phoneNumber: wNum, whatsapp_number: wNum, seatNumber: sSeat, seat_number: sSeat, governorate: gov, preferredBranch: branch, academic_branch: branch, totalScore: total_score, total_score, percentage, createdAt, created_at: createdAt });
 
   return res.json({
     success: true,
@@ -925,9 +976,10 @@ app.get('/api/stats', (req, res) => {
 });
 
 
-app.listen(ADMIN_PORT, () => {
+app.listen(ADMIN_PORT, async () => {
   console.log(`\n🛡️  Natiga Admin Server running on http://localhost:${ADMIN_PORT}`);
   console.log(`🔒 IP Whitelist: ${ALLOWED_IPS.filter(ip => ip !== '::1' && ip !== '::ffff:127.0.0.1').join(', ')}`);
   console.log(`🔑 JWT Auth: Enabled (8h expiry)`);
   console.log(`🌐 Admin Panel URL: http://localhost:3000/secure-admin-portal\n`);
+  await initSupabasePool();
 });
