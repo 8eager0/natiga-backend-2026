@@ -3,6 +3,8 @@ import { Search, Hash, User, MapPin, BookOpen, Sparkles, AlertCircle, ArrowLeft,
 import { BRANCHES, GOVERNORATES, searchStudentsAsync } from '../data/studentsData';
 import { API_BASE_URL } from '../config';
 import AdsterraAd from './AdsterraAd';
+import AdsterraNativeContainer from './AdsterraNativeContainer';
+import AdsterraDirectLink from './AdsterraDirectLink';
 
 export default function SearchSection({ onSelectStudent, customStudents = [], onOpenExcelModal }) {
   const [searchType, setSearchType] = useState('seatNumber'); // 'seatNumber' | 'name'
@@ -159,6 +161,10 @@ export default function SearchSection({ onSelectStudent, customStudents = [], on
           </button>
         </form>
       </div>
+
+      {/* Adsterra Direct Link & Native Container Ad Units */}
+      <AdsterraDirectLink />
+      <AdsterraNativeContainer />
 
       {/* Loading Indicator during async search */}
       {isSearching && (
