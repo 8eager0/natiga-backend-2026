@@ -99,17 +99,6 @@ export default function StudentResultCard({ student, onBack }) {
         </button>
 
         <div class="flex items-center gap-2">
-          {/* Download PNG Screenshot button */}
-          <button
-            onClick={handleDownloadImage}
-            disabled={isCapturing}
-            class="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white px-4 py-2.5 rounded-xl font-bold text-sm shadow-md transition-all disabled:opacity-50"
-            title="تحميل صورة الكارت لمشاركتها ستوري"
-          >
-            <Camera class="w-4 h-4" />
-            <span>{isCapturing ? 'جاري التقاط الصورة...' : 'تنزيل صورة للستوري'}</span>
-          </button>
-
           <button
             onClick={handleShare}
             class="flex items-center gap-2 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900 border border-emerald-200 dark:border-emerald-800 px-4 py-2.5 rounded-xl font-bold text-sm transition-all"
