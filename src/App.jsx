@@ -6,6 +6,7 @@ import StatsDashboard from './components/StatsDashboard';
 import AdminDashboard from './components/AdminDashboard';
 import Footer from './components/Footer';
 import LegalModal from './components/LegalModal';
+import { API_BASE_URL } from './config';
 
 // كشف مسار لوحة التحكم من URL
 const isAdminRoute = () =>
