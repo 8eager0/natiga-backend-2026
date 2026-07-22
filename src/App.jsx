@@ -37,6 +37,16 @@ export default function App() {
     }
   }, [darkMode]);
 
+  // Keep-Alive Ping to keep Render backend awake 24/7
+  useEffect(() => {
+    const pingBackend = () => {
+      fetch(`${API_BASE_URL}/api/info`).catch(() => {});
+    };
+    pingBackend();
+    const interval = setInterval(pingBackend, 3 * 60 * 1000); // Ping every 3 minutes
+    return () => clearInterval(interval);
+  }, []);
+
   if (isAdmin) {
     return <AdminDashboard />;
   }
