@@ -718,9 +718,19 @@ app.get('/api/search', searchLimiter, async (req, res) => {
   if (sqliteDb) {
     try {
       if (searchType === 'seatNumber') {
-        results = sqliteDb.prepare('SELECT seat_number as seatNumber, name, total_score as totalScore, percentage, status, branch, governorate, school FROM students WHERE seat_number = ? OR seat_number LIKE ? LIMIT 30').all(normQ, `%${normQ}%`);
+        const rows = sqliteDb.prepare('SELECT seat_number as seatNumber, name, total_score as totalScore, percentage, status, branch, governorate, school FROM students WHERE seat_number = ? OR seat_number LIKE ? LIMIT 30').all(normQ, `%${normQ}%`);
+        results = rows.map(r => ({
+          ...r,
+          percentage: Number(((r.totalScore / 320) * 100).toFixed(2)),
+          status: (r.totalScore / 320 * 100) >= 50 ? 'ناجح' : 'راسب'
+        }));
       } else {
-        results = sqliteDb.prepare('SELECT seat_number as seatNumber, name, total_score as totalScore, percentage, status, branch, governorate, school FROM students WHERE name LIKE ? LIMIT 30').all(`%${normQ}%`);
+        const rows = sqliteDb.prepare('SELECT seat_number as seatNumber, name, total_score as totalScore, percentage, status, branch, governorate, school FROM students WHERE name LIKE ? LIMIT 30').all(`%${normQ}%`);
+        results = rows.map(r => ({
+          ...r,
+          percentage: Number(((r.totalScore / 320) * 100).toFixed(2)),
+          status: (r.totalScore / 320 * 100) >= 50 ? 'ناجح' : 'راسب'
+        }));
       }
     } catch (e) {
       console.error('SQLite query error:', e.message);
