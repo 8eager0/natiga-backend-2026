@@ -5,6 +5,7 @@ import confetti from 'canvas-confetti';
 import html2canvas from 'html2canvas';
 import AdBanner from './AdBanner';
 import LeadGenForm from './LeadGenForm';
+import AdsterraAd from './AdsterraAd';
 
 export default function StudentResultCard({ student, onBack }) {
   const [isCapturing, setIsCapturing] = useState(false);
@@ -232,13 +233,19 @@ export default function StudentResultCard({ student, onBack }) {
         </div>
       </div>
 
+      {/* Adsterra Result Page Ad Units */}
+      <div className="no-print my-6 flex flex-col sm:flex-row items-center justify-center gap-6">
+        <AdsterraAd adKey="a019205f76a4a0315da7becc52188c93" width={468} height={60} />
+        <AdsterraAd adKey="59892d73e22cd4983b8fcb11d42f7836" width={160} height={300} />
+      </div>
+
       {/* Bottom Ad Banner Placeholder */}
-      <div class="no-print">
+      <div className="no-print">
         <AdBanner slotId="bottom-result-slot" />
       </div>
 
       {/* Lead Generation University Offer Form */}
-      <div class="no-print">
+      <div className="no-print">
         <LeadGenForm studentData={student} />
       </div>
     </div>

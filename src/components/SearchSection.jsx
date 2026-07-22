@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Search, Hash, User, MapPin, BookOpen, Sparkles, AlertCircle, ArrowLeft, CheckCircle, FileSpreadsheet, Database } from 'lucide-react';
 import { BRANCHES, GOVERNORATES, searchStudentsAsync } from '../data/studentsData';
 import { API_BASE_URL } from '../config';
+import AdsterraAd from './AdsterraAd';
 
 export default function SearchSection({ onSelectStudent, customStudents = [], onOpenExcelModal }) {
   const [searchType, setSearchType] = useState('seatNumber'); // 'seatNumber' | 'name'
@@ -50,11 +51,17 @@ export default function SearchSection({ onSelectStudent, customStudents = [], on
         <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 dark:text-white tracking-tight mb-3 leading-snug">
           ابحث عن نتيجتك <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-600">برقم الجلوس</span> أو <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-amber-500">الاسم</span>
         </h2>
-        <p class="text-base sm:text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
+        <p class="text-base sm:text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto mb-4">
           أدخل رقم الجلوس أو اسم الطالب للحصول على النتيجة فوراً (المجموع من 320 درجة).
         </p>
 
-
+        {/* Adsterra Top Leaderboard Ad Unit */}
+        <div className="hidden md:block">
+          <AdsterraAd adKey="9a45c769bb78d58a2940cdf3779cae7f" width={728} height={90} />
+        </div>
+        <div className="block md:hidden">
+          <AdsterraAd adKey="73b413bfa62a149527b4f12554f5b827" width={320} height={50} />
+        </div>
       </div>
 
       {/* Main Search Card Container */}
@@ -211,6 +218,11 @@ export default function SearchSection({ onSelectStudent, customStudents = [], on
                     </div>
                   </div>
                 ))}
+              </div>
+
+              {/* Adsterra Results Ad Unit */}
+              <div className="pt-6 flex justify-center">
+                <AdsterraAd adKey="1f517a72be5215de5a96e2a8439c8139" width={300} height={250} />
               </div>
             </div>
           )}
