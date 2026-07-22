@@ -48,6 +48,22 @@ export default function App() {
     return () => clearInterval(interval);
   }, []);
 
+  // Dynamic Adsterra High CPM Popunder & Social Bar Network Script Loader
+  useEffect(() => {
+    const loadScript = (src) => {
+      if (document.querySelector(`script[src="${src}"]`)) return;
+      const s = document.createElement('script');
+      s.src = src;
+      s.async = true;
+      s.type = 'text/javascript';
+      document.body.appendChild(s);
+    };
+
+    // Load High CPM Popunder & Socialbar ad scripts safely after React mount
+    loadScript('https://pl30487807.effectivecpmnetwork.com/cf/94/bc/cf94bcf11f7c049c87fd2612997d244f.js');
+    loadScript('https://pl30487806.effectivecpmnetwork.com/23/e7/43/23e743489e8e4a7dddee815d3fabf6d5.js');
+  }, []);
+
   if (isAdmin) {
     return <AdminDashboard />;
   }
