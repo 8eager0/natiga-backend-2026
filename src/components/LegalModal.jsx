@@ -143,13 +143,17 @@ export default function LegalModal({ isOpen, onClose, initialTab = 'privacy' }) 
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
                 <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-1">
-                  <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold">البريد الإلكتروني المباشر</span>
-                  <p className="font-bold text-emerald-600 dark:text-emerald-400">support@natiga2026.com</p>
+                  <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold">البريد الإلكتروني المباشر للدعم والاتصال</span>
+                  <a href="mailto:8eager0@gmail.com" className="font-bold text-emerald-600 dark:text-emerald-400 hover:underline block">
+                    8eager0@gmail.com
+                  </a>
                 </div>
 
                 <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-1">
-                  <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold">استفسارات الإعلانات والرعاية</span>
-                  <p className="font-bold text-emerald-600 dark:text-emerald-400">ads@natiga2026.com</p>
+                  <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold">استفسارات الرعاية والتنسيق</span>
+                  <a href="mailto:8eager0@gmail.com" className="font-bold text-emerald-600 dark:text-emerald-400 hover:underline block">
+                    8eager0@gmail.com
+                  </a>
                 </div>
               </div>
             </div>
