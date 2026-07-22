@@ -150,6 +150,7 @@ export default function LeadGenForm({ studentData }) {
             )}
 
             {/* 3. Auto-Captured Hidden Fields */}
+            <input type="hidden" name="seat_number" value={studentData ? (studentData.seatNumber || studentData.seat_number || '') : ''} />
             <input type="hidden" name="total_score" value={totalScore} />
             <input type="hidden" name="percentage" value={percentage} />
 

@@ -630,10 +630,10 @@ app.post('/api/leads', (req, res) => {
   if (sqliteDb) {
     try {
       const stmt = sqliteDb.prepare(`
-        INSERT INTO leads (student_name, whatsapp_number, governorate, academic_branch, total_score, percentage, created_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO leads (student_name, whatsapp_number, seat_number, governorate, academic_branch, total_score, percentage, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
       `);
-      const result = stmt.run(sName, wNum, gov, branch, total_score, percentage, createdAt);
+      const result = stmt.run(sName, wNum, sSeat, gov, branch, total_score, percentage, createdAt);
       if (result && result.lastInsertRowid) {
         leadId = Number(result.lastInsertRowid);
       }
