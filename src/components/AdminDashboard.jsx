@@ -400,9 +400,13 @@ export default function AdminDashboard() {
       const data = await res.json();
       if (res.ok && data.success) {
         setSettings(data.settings);
-        addToast(`تم تحديث الإعداد "${key}" بنجاح.`, 'success');
+        addToast(`✅ تم تحديث الإعداد بنجاح.`, 'success');
+      } else {
+        addToast(`❌ خطأ: ${data.error || data.message || 'فشل التحديث'}`, 'error');
       }
-    } catch { addToast('خطأ في تحديث الإعدادات.', 'error'); }
+    } catch (err) {
+      addToast(`❌ خطأ في الاتصال بالسيرفر: ${err.message}`, 'error');
+    }
   };
 
   // ----------------------------------------------------------
