@@ -59,12 +59,16 @@ db.exec('BEGIN TRANSACTION');
 
 let count = 0;
 for (const s of students) {
+  const totalScore = Number(s.totalScore || 0);
+  const percentage = Number(((totalScore / 320) * 100).toFixed(2));
+  const status = percentage >= 50 ? 'ناجح' : 'راسب';
+
   insertStmt.run(
     String(s.seatNumber || ''),
     String(s.name || ''),
-    Number(s.totalScore || 0),
-    Number(s.percentage || 0),
-    String(s.status || 'ناجح'),
+    totalScore,
+    percentage,
+    status,
     String(s.branch || 'عام'),
     String(s.governorate || 'جمهورية مصر العربية'),
     String(s.school || 'المدرسة الثانوية العامة')
