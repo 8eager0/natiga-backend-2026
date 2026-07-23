@@ -5,6 +5,7 @@ import React, { useEffect } from 'react';
  * مجهز للتوافق التام مع سياسات جوجل ووضع الإعلانات في الأماكن الاستراتيجية
  */
 export default function AdBanner({ slotId = '1234567890', format = 'auto', className = '' }) {
+  if (typeof window !== 'undefined' && window.ADS_ENABLED === false) return null;
   useEffect(() => {
     try {
       if (window.adsbygoogle) {

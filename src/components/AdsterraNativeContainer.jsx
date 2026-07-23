@@ -5,6 +5,7 @@ import React, { useEffect, useRef } from 'react';
  * Isolated inside srcdoc iframe to prevent document.write from wiping React DOM
  */
 export default function AdsterraNativeContainer({ className = '' }) {
+  if (typeof window !== 'undefined' && window.ADS_ENABLED === false) return null;
   const containerRef = useRef(null);
 
   useEffect(() => {

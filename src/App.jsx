@@ -39,6 +39,23 @@ export default function App() {
     }
   }, [darkMode]);
 
+  // Fetch Site Settings (ads_enabled)
+  useEffect(() => {
+    const fetchSiteSettings = () => {
+      fetch(`${API_BASE_URL}/api/site-settings`)
+        .then(res => res.json())
+        .then(data => {
+          if (data && typeof data.ads_enabled === 'boolean') {
+            window.ADS_ENABLED = data.ads_enabled;
+          }
+        })
+        .catch(() => {});
+    };
+    fetchSiteSettings();
+    const interval = setInterval(fetchSiteSettings, 30 * 1000);
+    return () => clearInterval(interval);
+  }, []);
+
   // Keep-Alive Ping to keep Render backend awake 24/7
   useEffect(() => {
     const pingBackend = () => {

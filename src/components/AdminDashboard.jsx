@@ -517,6 +517,39 @@ export default function AdminDashboard() {
 
               {dashboard ? (
                 <>
+                  {/* Master Ads Switch Banner */}
+                  <div className="bg-slate-800/80 border-2 border-slate-700 rounded-2xl p-5 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl">
+                    <div className="flex items-center gap-3.5">
+                      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-white font-black shadow-inner ${settings?.ads_enabled ? 'bg-emerald-600' : 'bg-red-600'}`}>
+                        <Activity className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <h3 className="text-base font-black text-white">زر التحكم السريع - إيقاف / تشغيل الإعلانات</h3>
+                        <p className="text-xs text-slate-300 font-bold mt-0.5">
+                          الحالة الحالية: {settings?.ads_enabled ? (
+                            <span className="text-emerald-400 font-black">🟢 جميع الإعلانات تعمل الآن بنجاح على الموقع</span>
+                          ) : (
+                            <span className="text-red-400 font-black">🔴 جميع الإعلانات متوقفة تماماً عن الظهور للطلاب</span>
+                          )}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => handleSettingsUpdate('ads_enabled', !settings?.ads_enabled)}
+                      className={`w-full sm:w-auto px-6 py-3 rounded-xl font-black text-sm transition-all shadow-lg flex items-center justify-center gap-2 ${
+                        settings?.ads_enabled
+                          ? 'bg-red-600 hover:bg-red-700 text-white shadow-red-600/20'
+                          : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/20'
+                      }`}
+                    >
+                      {settings?.ads_enabled ? (
+                        <><ToggleRight className="w-5 h-5" /> إيقاف جميع الإعلانات بلمسة واحدة</>
+                      ) : (
+                        <><ToggleLeft className="w-5 h-5" /> تشغيل جميع الإعلانات الآن</>
+                      )}
+                    </button>
+                  </div>
+
                   <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
                     <StatCard label="إجمالي الطلاب" value={dashboard.overview.totalStudents?.toLocaleString('ar')} icon={Users} color="blue" />
                     <StatCard label="نسبة النجاح" value={dashboard.overview.passRate} icon={CheckCircle2} color="emerald" sub={`ناجح: ${dashboard.overview.passCount?.toLocaleString('ar')}`} />

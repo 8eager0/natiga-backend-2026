@@ -7,6 +7,8 @@ import React, { useEffect, useRef } from 'react';
 export default function AdsterraAd({ adKey, width, height, format = 'iframe', className = '' }) {
   const containerRef = useRef(null);
 
+  if (typeof window !== 'undefined' && window.ADS_ENABLED === false) return null;
+
   useEffect(() => {
     if (!adKey || !containerRef.current) return;
 
