@@ -1,10 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { ShieldAlert, RefreshCw, AlertOctagon } from 'lucide-react';
+import { useAds } from './AdsContext';
 
 export default function AntiAdblockModal() {
+  const { adsEnabled } = useAds();
   const [isAdBlockerActive, setIsAdBlockerActive] = useState(false);
 
   useEffect(() => {
+    if (!adsEnabled) {
+      setIsAdBlockerActive(false);
+      return;
+    }
     const detectAdBlocker = async () => {
       let isBlocked = false;
 
@@ -49,9 +55,9 @@ export default function AntiAdblockModal() {
     // Re-check periodically every 4 seconds
     const interval = setInterval(detectAdBlocker, 4000);
     return () => clearInterval(interval);
-  }, []);
+  }, [adsEnabled]);
 
-  if (!isAdBlockerActive) return null;
+  if (!adsEnabled || !isAdBlockerActive) return null;
 
   return (
     <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-slate-950/90 backdrop-blur-xl p-4 sm:p-6 text-right animate-fadeIn">

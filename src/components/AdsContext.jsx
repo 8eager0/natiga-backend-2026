@@ -12,8 +12,13 @@ export const AdsProvider = ({ children }) => {
         const res = await fetch(`${API_BASE_URL}/api/site-settings`);
         const data = await res.json();
         if (data && typeof data.ads_enabled === 'boolean') {
-          setAdsEnabled(data.ads_enabled);
-          window.ADS_ENABLED = data.ads_enabled;
+          setAdsEnabled(prev => {
+            if (prev !== data.ads_enabled) {
+              window.ADS_ENABLED = data.ads_enabled;
+              return data.ads_enabled;
+            }
+            return prev;
+          });
         }
       } catch (err) {
         console.error('Failed to fetch site settings:', err);
@@ -21,7 +26,7 @@ export const AdsProvider = ({ children }) => {
     };
 
     checkSettings();
-    const interval = setInterval(checkSettings, 5000); // Check every 5s for fast toggle
+    const interval = setInterval(checkSettings, 4000);
     return () => clearInterval(interval);
   }, []);
 
