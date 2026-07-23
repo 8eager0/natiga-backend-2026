@@ -26,8 +26,20 @@ export const AdsProvider = ({ children }) => {
     };
 
     checkSettings();
-    const interval = setInterval(checkSettings, 4000);
-    return () => clearInterval(interval);
+    const interval = setInterval(checkSettings, 2000);
+
+    const handleCustomToggle = () => {
+      if (typeof window.ADS_ENABLED === 'boolean') {
+        setAdsEnabled(window.ADS_ENABLED);
+      }
+    };
+
+    window.addEventListener('ads_toggle', handleCustomToggle);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('ads_toggle', handleCustomToggle);
+    };
   }, []);
 
   // Dynamically load / remove Social Bar & Popunder scripts based on adsEnabled

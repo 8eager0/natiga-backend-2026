@@ -392,6 +392,10 @@ export default function AdminDashboard() {
   // ----------------------------------------------------------
   const handleSettingsUpdate = async (key, value) => {
     try {
+      if (key === 'ads_enabled') {
+        window.ADS_ENABLED = value;
+        window.dispatchEvent(new Event('ads_toggle'));
+      }
       const res = await fetch(`${ADMIN_API}/admin/settings`, {
         method: 'PATCH',
         headers: authHeaders(token),
@@ -400,6 +404,10 @@ export default function AdminDashboard() {
       const data = await res.json();
       if (res.ok && data.success) {
         setSettings(data.settings);
+        if (key === 'ads_enabled') {
+          window.ADS_ENABLED = data.settings.ads_enabled;
+          window.dispatchEvent(new Event('ads_toggle'));
+        }
         addToast(`✅ تم تحديث الإعداد بنجاح.`, 'success');
       } else {
         addToast(`❌ خطأ: ${data.error || data.message || 'فشل التحديث'}`, 'error');

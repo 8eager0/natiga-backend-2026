@@ -70,7 +70,11 @@ export default function App() {
 
 
   if (isAdmin) {
-    return <AdminDashboard />;
+    return (
+      <AdsProvider>
+        <AdminDashboard />
+      </AdsProvider>
+    );
   }
 
   const handleSelectStudent = (student) => {
