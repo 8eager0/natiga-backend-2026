@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Hash, User, MapPin, BookOpen, Sparkles, AlertCircle, ArrowLeft, CheckCircle, FileSpreadsheet, Database } from 'lucide-react';
+import { Search, Hash, User, MapPin, BookOpen, Sparkles, AlertCircle, ArrowLeft, CheckCircle, FileSpreadsheet, Database, Send, ExternalLink } from 'lucide-react';
 import { BRANCHES, GOVERNORATES, searchStudentsAsync } from '../data/studentsData';
 import { API_BASE_URL } from '../config';
 import AdsterraAd from './AdsterraAd';
@@ -141,6 +141,11 @@ export default function SearchSection({ onSelectStudent, customStudents = [], on
             )}
           </div>
 
+          {/* Adsterra Native Banner (300x250) Container - Slot 1 (Between Input and Submit Button) */}
+          <div className="my-6 flex justify-center items-center overflow-hidden min-h-[250px] rounded-2xl bg-slate-50/50 dark:bg-slate-800/20 py-2">
+            <AdsterraAd adKey="1f517a72be5215de5a96e2a8439c8139" width={300} height={250} />
+          </div>
+
           {/* Instant Submit Button */}
           <button
             type="submit"
@@ -159,6 +164,20 @@ export default function SearchSection({ onSelectStudent, customStudents = [], on
               </>
             )}
           </button>
+
+          {/* Adsterra Direct Link Button - Telegram / Coordination Channel */}
+          <div className="mt-3">
+            <a
+              href="https://www.effectivecpmnetwork.com/gf26fn1tk?key=8dddfc9479287281950cacc886d870c2"
+              target="_blank"
+              rel="noreferrer"
+              className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-sky-500 via-blue-600 to-indigo-600 hover:from-sky-600 hover:to-indigo-700 text-white font-extrabold text-sm sm:text-base shadow-md shadow-blue-500/20 transition-all flex items-center justify-center gap-2.5 border border-sky-400/30 transform hover:-translate-y-0.5"
+            >
+              <Send className="w-5 h-5 animate-pulse text-sky-200" />
+              <span>انضم لجروب التليجرام لمتابعة التنسيق لحظة بلحظة</span>
+              <ExternalLink className="w-4 h-4 text-sky-200" />
+            </a>
+          </div>
         </form>
       </div>
 

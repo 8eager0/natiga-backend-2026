@@ -222,6 +222,11 @@ export default function StudentResultCard({ student, onBack }) {
         </div>
       </div>
 
+      {/* Adsterra Native Banner (300x250) Container - Slot 2 (Between Result Card & LeadGenForm) */}
+      <div className="no-print my-6 flex justify-center items-center overflow-hidden min-h-[250px] rounded-2xl bg-white/50 dark:bg-slate-900/50 p-2">
+        <AdsterraAd adKey="1f517a72be5215de5a96e2a8439c8139" width={300} height={250} />
+      </div>
+
       {/* Adsterra Result Page Ad Units */}
       <div className="no-print my-6 flex flex-col sm:flex-row items-center justify-center gap-6">
         <AdsterraAd adKey="a019205f76a4a0315da7becc52188c93" width={468} height={60} />
