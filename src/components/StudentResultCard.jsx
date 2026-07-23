@@ -75,9 +75,13 @@ export default function StudentResultCard({ student, onBack }) {
         url: window.location.href,
       }).catch(() => {});
     } else {
-      navigator.clipboard.writeText(text);
-      alert('تم نسخ تفاصيل النتيجة إلى الحافظة ومستعد للمشاركة على واتساب وفيسبوك!');
     }
+  };
+
+  const handleWhatsAppShare = () => {
+    const text = `🎉 ألف مبروك نتيجة الثانوية العامة 2026 🎉\n\n👤 الطالب: ${student.name}\n🔢 رقم الجلوس: ${student.seatNumber}\n📊 المجموع: ${totalScore} من ${maxPossible}\n⭐️ النسبة المئوية: ${percentage}%\n✅ الحالة: ${statusText}\n\n🔍 استعلم عن نتيجتك برقم الجلوس عبر السيرفر السريع:\nhttps://natiga2026.com`;
+    const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
+    window.open(url, '_blank');
   };
 
   return (
@@ -98,21 +102,38 @@ export default function StudentResultCard({ student, onBack }) {
           <span>العودة للبحث</span>
         </button>
 
-        <div class="flex items-center gap-2">
+        <div class="flex flex-wrap items-center gap-2">
+          {/* WhatsApp Direct Share Button */}
           <button
-            onClick={handleShare}
-            class="flex items-center gap-2 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900 border border-emerald-200 dark:border-emerald-800 px-4 py-2.5 rounded-xl font-bold text-sm transition-all"
+            onClick={handleWhatsAppShare}
+            class="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl font-extrabold text-xs sm:text-sm shadow-md shadow-emerald-600/30 transition-all border border-emerald-500/40 transform hover:-translate-y-0.5"
+            title="مشاركة النتيجة على الواتساب"
           >
             <Share2 class="w-4 h-4" />
-            <span class="hidden sm:inline">مشاركة</span>
+            <span>مشاركة بالواتساب</span>
+          </button>
+
+          {/* Download Certificate Image Button */}
+          <button
+            onClick={handleDownloadImage}
+            disabled={isCapturing}
+            class="flex items-center gap-2 bg-slate-800 dark:bg-slate-700 hover:bg-slate-900 text-white px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm shadow-md transition-all disabled:opacity-50"
+            title="تحميل النتيجة كصورة تهنئة"
+          >
+            {isCapturing ? (
+              <span class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+            ) : (
+              <Camera class="w-4 h-4 text-emerald-400" />
+            )}
+            <span class="hidden sm:inline">تحميل كصورة</span>
           </button>
           
           <button
             onClick={handlePrint}
-            class="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-md shadow-emerald-600/30 transition-all"
+            class="flex items-center gap-2 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm shadow-sm transition-all"
           >
             <Printer class="w-4 h-4" />
-            <span>طباعة</span>
+            <span class="hidden sm:inline">طباعة</span>
           </button>
         </div>
       </div>
@@ -219,6 +240,39 @@ export default function StudentResultCard({ student, onBack }) {
             <ShieldCheck class="w-4 h-4" />
             <span>توثيق وزارة التربية والتعليم</span>
           </div>
+        </div>
+      </div>
+
+      {/* Viral Actions Banner: One-Click WhatsApp & Image Download */}
+      <div className="no-print my-6 bg-gradient-to-r from-emerald-900 via-slate-900 to-teal-950 p-5 rounded-3xl border border-emerald-800/60 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-right">
+        <div>
+          <h4 className="text-base font-black text-white flex items-center justify-center sm:justify-start gap-2">
+            <span>🎉 شارك فرحة النتيجة مع الأهل والأصدقاء</span>
+          </h4>
+          <p className="text-xs text-emerald-200/80 font-medium mt-1">
+            احصل على صورة التهنئة المعتمدة أو شارك درجاتك فوراً بنقرة واحدة عبر الواتساب.
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center justify-center gap-2.5 w-full sm:w-auto">
+          <button
+            onClick={handleWhatsAppShare}
+            className="flex-1 sm:flex-none px-5 py-3 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-black text-xs sm:text-sm shadow-lg transition-all flex items-center justify-center gap-2 transform hover:-translate-y-0.5"
+          >
+            <Share2 className="w-4 h-4" />
+            <span>شاركت النتيجة على الواتساب</span>
+          </button>
+          <button
+            onClick={handleDownloadImage}
+            disabled={isCapturing}
+            className="flex-1 sm:flex-none px-4 py-3 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs sm:text-sm border border-slate-700 transition-all flex items-center justify-center gap-2"
+          >
+            {isCapturing ? (
+              <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+            ) : (
+              <Camera className="w-4 h-4 text-emerald-400" />
+            )}
+            <span>تحميل الصورة</span>
+          </button>
         </div>
       </div>
 
