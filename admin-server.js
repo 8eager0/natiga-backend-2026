@@ -766,9 +766,21 @@ app.post('/api/leads', async (req, res) => {
 });
 
 // ----------------------------------------------------------
-// [J] مسار الاستعلام السريع برقم الجلوس (Fast Search API with Caching)
+// [J] مسار الاستعلام السريع برقم الجلوس (Fast Search API with Anti-Scraping Protection)
 // ----------------------------------------------------------
-app.get('/api/result/:seatNumber', async (req, res) => {
+const resultSearchLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // نافذة دقيقة واحدة
+  max: 15, // حد أقصى 15 طلب لكل عنوان IP في الدقيقة لمنع السحب الآلي
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    status: 429,
+    error: 'تجاوزت الحد المسموح للاستعلامات (15 طلب/دقيقة). يرجى الانتظار دقيقة واحدة لحماية السيرفر من السحب الآلي.',
+    success: false
+  }
+});
+
+app.get('/api/result/:seatNumber', resultSearchLimiter, async (req, res) => {
   const { seatNumber } = req.params;
   if (!seatNumber) {
     return res.status(400).json({ error: 'رقم الجلوس مطلوب.' });
