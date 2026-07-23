@@ -35,6 +35,10 @@ import { createClient } from 'redis';
 import { DatabaseSync } from 'node:sqlite';
 import pkg from 'pg';
 const { Pool } = pkg;
+import NodeCache from 'node-cache';
+
+// In-Memory Cache with 15 minutes TTL (900 seconds) for fast student result queries
+const resultCache = new NodeCache({ stdTTL: 900, checkperiod: 120 });
 
 const app = express();
 app.use(cors({
@@ -207,9 +211,21 @@ const initSupabasePool = async () => {
         total_score NUMERIC,
         percentage NUMERIC,
         created_at TIMESTAMPTZ DEFAULT NOW()
-      )
+      );
+
+      CREATE TABLE IF NOT EXISTS student_results (
+        id SERIAL PRIMARY KEY,
+        seat_number VARCHAR(50) UNIQUE NOT NULL,
+        student_name VARCHAR(255) NOT NULL,
+        total_score NUMERIC,
+        percentage NUMERIC,
+        branch VARCHAR(100),
+        status VARCHAR(50) DEFAULT 'ناجح'
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_seat_number ON student_results(seat_number);
     `);
-    console.log('✅ Supabase PostgreSQL متصل - جدول leads جاهز');
+    console.log('✅ Supabase PostgreSQL متصل - الجداول والفهارس (idx_seat_number) جاهزة');
   } catch (err) {
     console.error('❌ خطأ في الاتصال بـ Supabase:', err.message);
     pgPool = null;
@@ -747,6 +763,65 @@ app.post('/api/leads', async (req, res) => {
     message: 'تم تسجيل بياناتك بنجاح، سيتم التواصل معك على واتساب وإرسال توقعات التنسيق والمنح المتاحة قريباً.',
     leadId: leadId
   });
+});
+
+// ----------------------------------------------------------
+// [J] مسار الاستعلام السريع برقم الجلوس (Fast Search API with Caching)
+// ----------------------------------------------------------
+app.get('/api/result/:seatNumber', async (req, res) => {
+  const { seatNumber } = req.params;
+  if (!seatNumber) {
+    return res.status(400).json({ error: 'رقم الجلوس مطلوب.' });
+  }
+
+  const sSeat = String(seatNumber).trim();
+  const cacheKey = `result_${sSeat}`;
+
+  // 1. الفحص من node-cache أولاً
+  const cachedData = resultCache.get(cacheKey);
+  if (cachedData) {
+    console.log(`⚡ [Cache Hit] Returning result for seat #${sSeat} from NodeCache`);
+    return res.json({ success: true, source: 'cache', data: cachedData });
+  }
+
+  // 2. الاستعلام من قاعدة البيانات عند عدم وجود النتيجة في الكاش
+  try {
+    let studentResult = null;
+
+    if (pgPool) {
+      const dbRes = await pgPool.query(
+        'SELECT id, seat_number as "seatNumber", student_name as "name", total_score as "totalScore", percentage, branch, status FROM student_results WHERE seat_number = $1 LIMIT 1',
+        [sSeat]
+      );
+      studentResult = dbRes.rows[0] || null;
+    }
+
+    if (!studentResult && sqliteDb) {
+      try {
+        const sqlRes = sqliteDb.prepare(
+          'SELECT seatNumber, name, totalScore, percentage, branch, status FROM students WHERE seatNumber = ? LIMIT 1'
+        ).get(sSeat);
+        if (sqlRes) studentResult = sqlRes;
+      } catch (e) {}
+    }
+
+    if (!studentResult && seatMap.has(normalizeArabic(sSeat))) {
+      studentResult = seatMap.get(normalizeArabic(sSeat));
+    }
+
+    if (!studentResult) {
+      return res.status(404).json({ error: 'عفواً، لم يتم العثور على النتيجة برقم الجلوس المرفق.' });
+    }
+
+    // 3. حفظ النتيجة في node-cache لمدة 15 دقيقة وإرجاعها
+    resultCache.set(cacheKey, studentResult);
+    console.log(`💾 [Cache Miss -> Saved] Cached result for seat #${sSeat} in NodeCache`);
+
+    return res.json({ success: true, source: 'database', data: studentResult });
+  } catch (err) {
+    console.error('Error fetching student result:', err.message);
+    return res.status(500).json({ error: 'حدث خطأ أثناء الاستعلام عن النتيجة.' });
+  }
 });
 
 // ----------------------------------------------------------
