@@ -6,6 +6,7 @@ import StatsDashboard from './components/StatsDashboard';
 import AdminDashboard from './components/AdminDashboard';
 import Footer from './components/Footer';
 import LegalModal from './components/LegalModal';
+import AntiAdblockModal from './components/AntiAdblockModal';
 import { API_BASE_URL } from './config';
 
 // كشف مسار لوحة التحكم من URL
@@ -99,6 +100,8 @@ export default function App() {
         initialTab={legalModal.tab}
         onClose={() => setLegalModal({ isOpen: false, tab: 'privacy' })}
       />
+
+      <AntiAdblockModal />
     </div>
   );
 }
