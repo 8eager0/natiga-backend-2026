@@ -7,6 +7,7 @@ import AdminDashboard from './components/AdminDashboard';
 import Footer from './components/Footer';
 import LegalModal from './components/LegalModal';
 import AntiAdblockModal from './components/AntiAdblockModal';
+import { AdsProvider } from './components/AdsContext';
 import { API_BASE_URL } from './config';
 
 // كشف مسار لوحة التحكم من URL
@@ -89,36 +90,38 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300 font-cairo">
-      <Navbar
-        activeTab={activeTab}
-        setActiveTab={(tab) => {
-          setActiveTab(tab);
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-        }}
-        darkMode={darkMode}
-        setDarkMode={setDarkMode}
-      />
+    <AdsProvider>
+      <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-cairo transition-colors duration-300">
+        <Navbar
+          activeTab={activeTab}
+          setActiveTab={(tab) => {
+            setActiveTab(tab);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
+          darkMode={darkMode}
+          setDarkMode={setDarkMode}
+        />
 
-      <main className="flex-1">
-        {activeTab === 'search' && (
-          <SearchSection onSelectStudent={handleSelectStudent} />
-        )}
-        {activeTab === 'result' && selectedStudent && (
-          <StudentResultCard student={selectedStudent} onBack={handleBackToSearch} />
-        )}
-        {activeTab === 'stats' && <StatsDashboard />}
-      </main>
+        <main className="flex-1">
+          {activeTab === 'search' && (
+            <SearchSection onSelectStudent={handleSelectStudent} />
+          )}
+          {activeTab === 'result' && selectedStudent && (
+            <StudentResultCard student={selectedStudent} onBack={handleBackToSearch} />
+          )}
+          {activeTab === 'stats' && <StatsDashboard />}
+        </main>
 
-      <Footer onOpenLegal={handleOpenLegal} />
+        <Footer onOpenLegal={handleOpenLegal} />
 
-      <LegalModal
-        isOpen={legalModal.isOpen}
-        initialTab={legalModal.tab}
-        onClose={() => setLegalModal({ isOpen: false, tab: 'privacy' })}
-      />
+        <LegalModal
+          isOpen={legalModal.isOpen}
+          initialTab={legalModal.tab}
+          onClose={() => setLegalModal({ isOpen: false, tab: 'privacy' })}
+        />
 
-      <AntiAdblockModal />
-    </div>
+        <AntiAdblockModal />
+      </div>
+    </AdsProvider>
   );
 }

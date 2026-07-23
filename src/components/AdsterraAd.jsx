@@ -1,13 +1,11 @@
 import React, { useEffect, useRef } from 'react';
+import { useAds } from './AdsContext';
 
-/**
- * Adsterra Ad Unit Component
- * Uses srcdoc iframe isolation for 100% browser compatibility (Chrome, Safari, Mobile)
- */
 export default function AdsterraAd({ adKey, width, height, format = 'iframe', className = '' }) {
   const containerRef = useRef(null);
+  const { adsEnabled } = useAds();
 
-  if (typeof window !== 'undefined' && window.ADS_ENABLED === false) return null;
+  if (!adsEnabled) return null;
 
   useEffect(() => {
     if (!adKey || !containerRef.current) return;

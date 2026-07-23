@@ -1,10 +1,12 @@
 import React from 'react';
 import { ExternalLink, Sparkles, Gift } from 'lucide-react';
+import { useAds } from './AdsContext';
 
 const DIRECT_LINK_URL = 'https://www.effectivecpmnetwork.com/gf26fn1tk?key=8dddfc9479287281950cacc886d870c2';
 
 export default function AdsterraDirectLink({ className = '' }) {
-  if (typeof window !== 'undefined' && window.ADS_ENABLED === false) return null;
+  const { adsEnabled } = useAds();
+  if (!adsEnabled) return null;
   return (
     <div className={`my-6 ${className}`}>
       <a

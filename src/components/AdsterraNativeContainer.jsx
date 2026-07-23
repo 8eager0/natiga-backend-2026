@@ -1,11 +1,9 @@
 import React, { useEffect, useRef } from 'react';
+import { useAds } from './AdsContext';
 
-/**
- * Adsterra Native Container Component
- * Isolated inside srcdoc iframe to prevent document.write from wiping React DOM
- */
 export default function AdsterraNativeContainer({ className = '' }) {
-  if (typeof window !== 'undefined' && window.ADS_ENABLED === false) return null;
+  const { adsEnabled } = useAds();
+  if (!adsEnabled) return null;
   const containerRef = useRef(null);
 
   useEffect(() => {

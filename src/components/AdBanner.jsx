@@ -1,11 +1,9 @@
 import React, { useEffect } from 'react';
+import { useAds } from './AdsContext';
 
-/**
- * مكون إعلانات Google AdSense المستجيب (Responsive Ad Slot)
- * مجهز للتوافق التام مع سياسات جوجل ووضع الإعلانات في الأماكن الاستراتيجية
- */
 export default function AdBanner({ slotId = '1234567890', format = 'auto', className = '' }) {
-  if (typeof window !== 'undefined' && window.ADS_ENABLED === false) return null;
+  const { adsEnabled } = useAds();
+  if (!adsEnabled) return null;
   useEffect(() => {
     try {
       if (window.adsbygoogle) {
