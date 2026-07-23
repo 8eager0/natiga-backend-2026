@@ -5,9 +5,8 @@ export default function AdsterraAd({ adKey, width, height, format = 'iframe', cl
   const containerRef = useRef(null);
   const { adsEnabled } = useAds();
 
-  if (!adsEnabled) return null;
-
   useEffect(() => {
+    if (!adsEnabled) return;
     if (!adKey || !containerRef.current) return;
 
     const htmlContent = `<!DOCTYPE html>
@@ -34,6 +33,8 @@ export default function AdsterraAd({ adKey, width, height, format = 'iframe', cl
 
     containerRef.current.innerHTML = `<iframe srcdoc="${htmlContent.replace(/"/g, '&quot;')}" width="${width}" height="${height}" style="border:none; overflow:hidden;" scrolling="no"></iframe>`;
   }, [adKey, width, height, format]);
+
+  if (!adsEnabled) return null;
 
   return (
     <div className={`my-4 flex flex-col items-center justify-center overflow-hidden min-h-[${height}px] ${className}`}>

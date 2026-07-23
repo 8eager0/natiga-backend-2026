@@ -3,7 +3,6 @@ import { useAds } from './AdsContext';
 
 export default function AdBanner({ slotId = '1234567890', format = 'auto', className = '' }) {
   const { adsEnabled } = useAds();
-  if (!adsEnabled) return null;
   useEffect(() => {
     try {
       if (window.adsbygoogle) {
@@ -13,6 +12,8 @@ export default function AdBanner({ slotId = '1234567890', format = 'auto', class
       console.error(e);
     }
   }, []);
+
+  if (!adsEnabled) return null;
 
   return (
     <div class={`w-full my-6 text-center overflow-hidden min-h-[90px] ${className}`}>

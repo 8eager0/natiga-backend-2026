@@ -71,19 +71,6 @@ export const AdsProvider = ({ children }) => {
           try { s.remove(); } catch (e) {}
         });
 
-        // Safely remove known adsterra container overlays
-        const selectors = [
-          '#container-bf09d6671c56c7cb443661c2f0a54842',
-          '[id*="adsterra"]',
-          '[class*="adsterra"]',
-          'iframe[src*="effectivecpmnetwork"]',
-          'iframe[src*="highperformanceformat"]'
-        ];
-        selectors.forEach(sel => {
-          try {
-            document.querySelectorAll(sel).forEach(el => el.remove());
-          } catch (e) {}
-        });
 
         // Safely reset body & html inline styles
         if (document.body) {

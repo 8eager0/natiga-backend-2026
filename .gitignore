@@ -7,3 +7,4 @@ dist
 src/data/importedData.json
 
 .vercel
+database/*.sqlite*

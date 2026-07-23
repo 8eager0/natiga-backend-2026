@@ -1,23 +1,18 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { calculateStudentStats } from '../data/studentsData';
-import { Printer, Share2, ArrowRight, CheckCircle2, AlertTriangle, ShieldCheck, GraduationCap, Building2, BookOpen, User, Hash, Download, Camera } from 'lucide-react';
+import { Printer, Share2, ArrowRight, CheckCircle2, AlertTriangle, ShieldCheck, GraduationCap, BookOpen, User, Hash } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import html2canvas from 'html2canvas';
 import AdBanner from './AdBanner';
 import LeadGenForm from './LeadGenForm';
 import AdsterraAd from './AdsterraAd';
 import CollegePredictor from './CollegePredictor';
 
 export default function StudentResultCard({ student, onBack }) {
-  const [isCapturing, setIsCapturing] = useState(false);
-
-  if (!student) return null;
-
-  const { totalScore, maxPossible, percentage } = calculateStudentStats(student);
-  const isPassed = percentage >= 50;
-  const statusText = isPassed ? 'ناجح' : 'راسب';
 
   useEffect(() => {
+    if (!student) return;
+    const { percentage } = calculateStudentStats(student);
+    const isPassed = percentage >= 50;
     if (isPassed) {
       confetti({
         particleCount: 80,
@@ -25,46 +20,16 @@ export default function StudentResultCard({ student, onBack }) {
         origin: { y: 0.6 }
       });
     }
-  }, [student, isPassed]);
+  }, [student]);
+
+  if (!student) return null;
+
+  const { totalScore, maxPossible, percentage } = calculateStudentStats(student);
+  const isPassed = percentage >= 50;
+  const statusText = isPassed ? 'ناجح' : 'راسب';
 
   const handlePrint = () => {
     window.print();
-  };
-
-  // Viral Image Capture & Download via html2canvas
-  const handleDownloadImage = async () => {
-    const element = document.getElementById('printable-certificate');
-    if (!element) return;
-
-    setIsCapturing(true);
-
-    try {
-      const canvas = await html2canvas(element, {
-        scale: 2, // High resolution image output
-        useCORS: true,
-        backgroundColor: '#ffffff',
-      });
-
-      // Append watermark canvas overlay
-      const ctx = canvas.getContext('2d');
-      if (ctx) {
-        ctx.font = 'bold 24px Cairo, sans-serif';
-        ctx.fillStyle = 'rgba(0, 104, 56, 0.85)';
-        ctx.textAlign = 'center';
-        ctx.fillText('نتيجة الثانوية العامة 2026 - بوابة النتائج المعتمدة (Natiga2026.com)', canvas.width / 2, canvas.height - 30);
-      }
-
-      const image = canvas.toDataURL('image/png');
-      const link = document.createElement('a');
-      link.href = image;
-      link.download = `نتيجة_${student.seatNumber}_${student.name}.png`;
-      link.click();
-      setIsCapturing(false);
-    } catch (err) {
-      console.error(err);
-      setIsCapturing(false);
-      alert('حدث خطأ أثناء التقاط الصورة.');
-    }
   };
 
   const handleShare = () => {
@@ -114,21 +79,6 @@ export default function StudentResultCard({ student, onBack }) {
             <span>مشاركة بالواتساب</span>
           </button>
 
-          {/* Download Certificate Image Button */}
-          <button
-            onClick={handleDownloadImage}
-            disabled={isCapturing}
-            class="flex items-center gap-2 bg-slate-800 dark:bg-slate-700 hover:bg-slate-900 text-white px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm shadow-md transition-all disabled:opacity-50"
-            title="تحميل النتيجة كصورة تهنئة"
-          >
-            {isCapturing ? (
-              <span class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-            ) : (
-              <Camera class="w-4 h-4 text-emerald-400" />
-            )}
-            <span class="hidden sm:inline">تحميل كصورة</span>
-          </button>
-          
           <button
             onClick={handlePrint}
             class="flex items-center gap-2 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm shadow-sm transition-all"
@@ -165,9 +115,6 @@ export default function StudentResultCard({ student, onBack }) {
             </div>
           </div>
 
-          <h2 class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight mb-1">
-            بطاقة نتيجة شهادة الثانوية العامة
-          </h2>
           <p class="text-xs font-semibold text-slate-500 dark:text-slate-400">
             العام الدراسي 2025 - 2026
           </p>
@@ -202,7 +149,7 @@ export default function StudentResultCard({ student, onBack }) {
           {/* Total Score Box */}
           <div class="bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-800/80 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col items-center justify-center">
             <span class="text-xs font-extrabold text-slate-500 dark:text-slate-400 mb-2">الدرجة الإجمالية</span>
-            <div class="text-4xl font-black text-slate-900 dark:text-white tracking-tight">
+            <div class="text-4xl font-black text-slate-900 dark:text-white" style={{ letterSpacing: 'normal' }}>
               {totalScore}
             </div>
             <span class="text-xs font-bold text-slate-400 mt-1">من إجمالي {maxPossible} درجة</span>
@@ -211,7 +158,7 @@ export default function StudentResultCard({ student, onBack }) {
           {/* Percentage Box */}
           <div class="bg-gradient-to-b from-emerald-50 to-emerald-100/60 dark:from-emerald-950/60 dark:to-emerald-900/40 p-6 rounded-3xl border border-emerald-200 dark:border-emerald-800 shadow-md flex flex-col items-center justify-center sm:scale-105">
             <span class="text-xs font-extrabold text-emerald-800 dark:text-emerald-300 mb-2">النسبة المئوية</span>
-            <div class="text-4xl sm:text-5xl font-black text-emerald-600 dark:text-emerald-400 tracking-tight">
+            <div class="text-4xl sm:text-5xl font-black text-emerald-600 dark:text-emerald-400" style={{ letterSpacing: 'normal' }}>
               {percentage}%
             </div>
             <span class="text-xs font-bold text-emerald-700 dark:text-emerald-400 mt-1">النسبة العامة</span>
@@ -244,14 +191,14 @@ export default function StudentResultCard({ student, onBack }) {
         </div>
       </div>
 
-      {/* Viral Actions Banner: One-Click WhatsApp & Image Download */}
+      {/* Viral Actions Banner: One-Click WhatsApp Share */}
       <div className="no-print my-6 bg-gradient-to-r from-emerald-900 via-slate-900 to-teal-950 p-5 rounded-3xl border border-emerald-800/60 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-right">
         <div>
           <h4 className="text-base font-black text-white flex items-center justify-center sm:justify-start gap-2">
             <span>🎉 شارك فرحة النتيجة مع الأهل والأصدقاء</span>
           </h4>
           <p className="text-xs text-emerald-200/80 font-medium mt-1">
-            احصل على صورة التهنئة المعتمدة أو شارك درجاتك فوراً بنقرة واحدة عبر الواتساب.
+            شارك درجاتك فوراً بنقرة واحدة عبر الواتساب.
           </p>
         </div>
         <div className="flex flex-wrap items-center justify-center gap-2.5 w-full sm:w-auto">
@@ -261,18 +208,6 @@ export default function StudentResultCard({ student, onBack }) {
           >
             <Share2 className="w-4 h-4" />
             <span>شاركت النتيجة على الواتساب</span>
-          </button>
-          <button
-            onClick={handleDownloadImage}
-            disabled={isCapturing}
-            className="flex-1 sm:flex-none px-4 py-3 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs sm:text-sm border border-slate-700 transition-all flex items-center justify-center gap-2"
-          >
-            {isCapturing ? (
-              <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-            ) : (
-              <Camera className="w-4 h-4 text-emerald-400" />
-            )}
-            <span>تحميل الصورة</span>
           </button>
         </div>
       </div>

@@ -3,7 +3,6 @@ import { useAds } from './AdsContext';
 
 export default function AdsterraNativeContainer({ className = '' }) {
   const { adsEnabled } = useAds();
-  if (!adsEnabled) return null;
   const containerRef = useRef(null);
 
   useEffect(() => {
@@ -25,6 +24,8 @@ export default function AdsterraNativeContainer({ className = '' }) {
 
     containerRef.current.innerHTML = `<iframe srcdoc="${htmlContent.replace(/"/g, '&quot;')}" width="100%" height="150" style="border:none; overflow:hidden;" scrolling="no"></iframe>`;
   }, []);
+
+  if (!adsEnabled) return null;
 
   return (
     <div className={`my-6 flex flex-col items-center justify-center ${className}`}>
