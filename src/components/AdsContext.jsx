@@ -42,51 +42,61 @@ export const AdsProvider = ({ children }) => {
     };
   }, []);
 
-  // Dynamically load / remove Social Bar & Popunder scripts & injected overlays based on adsEnabled
+  // Dynamically load / remove Social Bar & Popunder scripts & injected overlays safely
   useEffect(() => {
-    const scriptSources = [
-      'https://pl30487806.effectivecpmnetwork.com/23/e7/43/23e743489e8e4a7dddee815d3fabf6d5.js',
-      'https://pl30487807.effectivecpmnetwork.com/cf/94/bc/cf94bcf11f7c049c87fd2612997d244f.js',
-      'https://pl30488574.effectivecpmnetwork.com/bf09d6671c56c7cb443661c2f0a54842/invoke.js'
-    ];
+    try {
+      const scriptSources = [
+        'https://pl30487806.effectivecpmnetwork.com/23/e7/43/23e743489e8e4a7dddee815d3fabf6d5.js',
+        'https://pl30487807.effectivecpmnetwork.com/cf/94/bc/cf94bcf11f7c049c87fd2612997d244f.js',
+        'https://pl30488574.effectivecpmnetwork.com/bf09d6671c56c7cb443661c2f0a54842/invoke.js'
+      ];
 
-    if (adsEnabled) {
-      // Inject scripts if not already in DOM
-      scriptSources.forEach(src => {
-        if (!document.querySelector(`script[src="${src}"]`)) {
-          const s = document.createElement('script');
-          s.src = src;
-          s.async = true;
-          s.dataset.dynamicAd = 'true';
-          document.body.appendChild(s);
-        }
-      });
-    } else {
-      // 1. Remove all dynamic ad scripts from DOM if ads are disabled
-      const adScripts = document.querySelectorAll(
-        'script[src*="effectivecpmnetwork"], script[src*="highperformanceformat"], script[dataset-dynamic-ad="true"]'
-      );
-      adScripts.forEach(s => s.remove());
-
-      // 2. Remove ANY non-root elements injected directly into document.body (Adsterra full-screen black backdrops/masks)
-      if (typeof document !== 'undefined' && document.body) {
-        const bodyChildren = Array.from(document.body.children);
-        bodyChildren.forEach(child => {
-          if (child.id !== 'root' && child.tagName !== 'SCRIPT') {
-            child.remove();
+      if (adsEnabled) {
+        // Inject scripts if not already in DOM
+        scriptSources.forEach(src => {
+          if (!document.querySelector(`script[src="${src}"]`)) {
+            const s = document.createElement('script');
+            s.src = src;
+            s.async = true;
+            s.dataset.dynamicAd = 'true';
+            document.body.appendChild(s);
           }
         });
+      } else {
+        // Safe Cleanup - wrapped in try/catch to ensure React NEVER crashes
+        const adScripts = document.querySelectorAll(
+          'script[src*="effectivecpmnetwork"], script[src*="highperformanceformat"], script[dataset-dynamic-ad="true"]'
+        );
+        adScripts.forEach(s => {
+          try { s.remove(); } catch (e) {}
+        });
 
-        // 3. Reset any styles Adsterra mutated on body/html
-        document.body.style.overflow = '';
-        document.body.style.position = '';
-        document.body.style.pointerEvents = '';
-        document.body.style.background = '';
+        // Safely remove known adsterra container overlays
+        const selectors = [
+          '#container-bf09d6671c56c7cb443661c2f0a54842',
+          '[id*="adsterra"]',
+          '[class*="adsterra"]',
+          'iframe[src*="effectivecpmnetwork"]',
+          'iframe[src*="highperformanceformat"]'
+        ];
+        selectors.forEach(sel => {
+          try {
+            document.querySelectorAll(sel).forEach(el => el.remove());
+          } catch (e) {}
+        });
+
+        // Safely reset body & html inline styles
+        if (document.body) {
+          document.body.style.overflow = '';
+          document.body.style.position = '';
+          document.body.style.pointerEvents = '';
+        }
         if (document.documentElement) {
           document.documentElement.style.overflow = '';
-          document.documentElement.style.position = '';
         }
       }
+    } catch (error) {
+      console.error('Safe ad cleanup caught error:', error);
     }
   }, [adsEnabled]);
 
@@ -97,4 +107,7 @@ export const AdsProvider = ({ children }) => {
   );
 };
 
-export const useAds = () => useContext(AdsContext);
+export const useAds = () => {
+  const context = useContext(AdsContext);
+  return context || { adsEnabled: true };
+};
