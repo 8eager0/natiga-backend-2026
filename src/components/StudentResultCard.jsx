@@ -6,6 +6,7 @@ import html2canvas from 'html2canvas';
 import AdBanner from './AdBanner';
 import LeadGenForm from './LeadGenForm';
 import AdsterraAd from './AdsterraAd';
+import CollegePredictor from './CollegePredictor';
 
 export default function StudentResultCard({ student, onBack }) {
   const [isCapturing, setIsCapturing] = useState(false);
@@ -274,6 +275,11 @@ export default function StudentResultCard({ student, onBack }) {
             <span>تحميل الصورة</span>
           </button>
         </div>
+      </div>
+
+      {/* College Predictor Calculator Component */}
+      <div className="no-print">
+        <CollegePredictor studentPercentage={percentage} studentBranch={student.branch || 'علمي علوم'} />
       </div>
 
       {/* Adsterra Native Banner (300x250) Container - Slot 2 (Between Result Card & LeadGenForm) */}
