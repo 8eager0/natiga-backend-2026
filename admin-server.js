@@ -962,11 +962,15 @@ const searchLimiter = rateLimit({
 app.get('/api/search', searchLimiter, async (req, res) => {
   const query = req.query.q || '';
   const searchType = req.query.type || 'seatNumber';
+  const minScoreParam = req.query.minScore;
+  const maxScoreParam = req.query.maxScore;
+  const minScore = minScoreParam !== undefined && minScoreParam !== '' ? Number(minScoreParam) : null;
+  const maxScore = maxScoreParam !== undefined && maxScoreParam !== '' ? Number(maxScoreParam) : null;
   const normQ = normalizeArabic(query);
 
-  if (!normQ || normQ.length < 2) return res.json([]);
+  if (!normQ && minScore === null && maxScore === null) return res.json([]);
 
-  const cacheKey = `result:${searchType}:${normQ}`;
+  const cacheKey = `result:${searchType}:${normQ}:${minScore}:${maxScore}`;
   try {
     if (redisClient.isOpen) {
       const cached = await redisClient.get(cacheKey);
@@ -980,41 +984,54 @@ app.get('/api/search', searchLimiter, async (req, res) => {
   let results = [];
   if (sqliteDb) {
     try {
-      if (searchType === 'seatNumber') {
-        const rows = sqliteDb.prepare('SELECT seat_number as seatNumber, name, total_score as totalScore, percentage, status, branch, governorate, school FROM students WHERE seat_number = ? OR seat_number LIKE ? LIMIT 30').all(normQ, `%${normQ}%`);
-        results = rows.map(r => ({
-          ...r,
-          percentage: Number(((r.totalScore / 320) * 100).toFixed(2)),
-          status: (r.totalScore / 320 * 100) >= 50 ? 'ناجح' : 'راسب'
-        }));
-      } else {
-        const rows = sqliteDb.prepare('SELECT seat_number as seatNumber, name, total_score as totalScore, percentage, status, branch, governorate, school FROM students WHERE name LIKE ? LIMIT 30').all(`%${normQ}%`);
-        results = rows.map(r => ({
-          ...r,
-          percentage: Number(((r.totalScore / 320) * 100).toFixed(2)),
-          status: (r.totalScore / 320 * 100) >= 50 ? 'ناجح' : 'راسب'
-        }));
+      let sql = 'SELECT seat_number as seatNumber, name, total_score as totalScore, percentage, status, branch, governorate, school FROM students WHERE 1=1';
+      const params = [];
+      if (normQ) {
+        if (searchType === 'seatNumber') {
+          sql += ' AND (seat_number = ? OR seat_number LIKE ?)';
+          params.push(normQ, `%${normQ}%`);
+        } else {
+          sql += ' AND name LIKE ?';
+          params.push(`%${normQ}%`);
+        }
       }
+      if (minScore !== null) {
+        sql += ' AND total_score >= ?';
+        params.push(minScore);
+      }
+      if (maxScore !== null) {
+        sql += ' AND total_score <= ?';
+        params.push(maxScore);
+      }
+      sql += ' LIMIT 50';
+
+      const rows = sqliteDb.prepare(sql).all(...params);
+      results = rows.map(r => ({
+        ...r,
+        percentage: Number(((r.totalScore / 320) * 100).toFixed(2)),
+        status: (r.totalScore / 320 * 100) >= 50 ? 'ناجح' : 'راسب'
+      }));
     } catch (e) {
       console.error('SQLite query error:', e.message);
     }
-  } else if (searchType === 'seatNumber') {
-    const exact = seatMap.get(normQ);
-    if (exact) results = [exact];
-    else {
-      for (const st of studentsArray) {
-        if (normalizeArabic(st.seatNumber).includes(normQ)) {
-          results.push(st);
-          if (results.length >= 30) break;
-        }
-      }
-    }
   } else {
     for (const st of studentsArray) {
-      if (normalizeArabic(st.name).includes(normQ)) {
-        results.push(st);
-        if (results.length >= 30) break;
+      let matchesQuery = true;
+      if (normQ) {
+        if (searchType === 'seatNumber') {
+          matchesQuery = normalizeArabic(st.seatNumber).includes(normQ);
+        } else {
+          matchesQuery = normalizeArabic(st.name).includes(normQ);
+        }
       }
+      if (!matchesQuery) continue;
+
+      const score = Number(st.totalScore || 0);
+      if (minScore !== null && score < minScore) continue;
+      if (maxScore !== null && score > maxScore) continue;
+
+      results.push(st);
+      if (results.length >= 50) break;
     }
   }
 

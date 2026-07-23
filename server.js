@@ -87,11 +87,15 @@ if (fs.existsSync(dataPath)) {
 app.get('/api/search', async (req, res) => {
   const query = req.query.q || '';
   const searchType = req.query.type || 'seatNumber';
+  const minScoreParam = req.query.minScore;
+  const maxScoreParam = req.query.maxScore;
+  const minScore = minScoreParam !== undefined && minScoreParam !== '' ? Number(minScoreParam) : null;
+  const maxScore = maxScoreParam !== undefined && maxScoreParam !== '' ? Number(maxScoreParam) : null;
   const normQ = normalizeArabic(query);
 
-  if (!normQ) return res.json([]);
+  if (!normQ && minScore === null && maxScore === null) return res.json([]);
 
-  const cacheKey = `result:${searchType}:${normQ}`;
+  const cacheKey = `result:${searchType}:${normQ}:${minScore}:${maxScore}`;
 
   // Step A: فحص التخزين المؤقت في Redis أولاً
   try {
@@ -106,25 +110,24 @@ app.get('/api/search', async (req, res) => {
 
   // Step B: البحث في ذاكرة السيرفر وقاعدة البيانات
   let results = [];
-  if (searchType === 'seatNumber') {
-    const exact = seatMap.get(normQ);
-    if (exact) {
-      results = [exact];
-    } else {
-      for (let i = 0; i < studentsArray.length; i++) {
-        if (normalizeArabic(studentsArray[i].seatNumber).includes(normQ)) {
-          results.push(studentsArray[i]);
-          if (results.length >= 30) break;
-        }
+  for (let i = 0; i < studentsArray.length; i++) {
+    const st = studentsArray[i];
+    let matchesQuery = true;
+    if (normQ) {
+      if (searchType === 'seatNumber') {
+        matchesQuery = normalizeArabic(st.seatNumber).includes(normQ);
+      } else {
+        matchesQuery = normalizeArabic(st.name).includes(normQ);
       }
     }
-  } else {
-    for (let i = 0; i < studentsArray.length; i++) {
-      if (normalizeArabic(studentsArray[i].name).includes(normQ)) {
-        results.push(studentsArray[i]);
-        if (results.length >= 30) break;
-      }
-    }
+    if (!matchesQuery) continue;
+
+    const score = Number(st.totalScore || 0);
+    if (minScore !== null && score < minScore) continue;
+    if (maxScore !== null && score > maxScore) continue;
+
+    results.push(st);
+    if (results.length >= 50) break;
   }
 
   // Step C: التخزين في Redis بمدة صلاحية 24 ساعة (TTL 86400s)

@@ -40,12 +40,20 @@ export const calculateStudentStats = (student) => {
 import { API_BASE_URL } from '../config';
 
 // Async API search against 810,980 RAM Indexed backend
-export const searchStudentsAsync = async (query, searchType = 'seatNumber', customStudents = []) => {
+export const searchStudentsAsync = async (query, searchType = 'seatNumber', customStudents = [], filters = {}) => {
   const normQuery = normalizeArabic(query);
-  if (!normQuery) return [];
+  const { minScore, maxScore } = filters;
+
+  if (!normQuery && (minScore === undefined || minScore === '') && (maxScore === undefined || maxScore === '')) {
+    return [];
+  }
+
+  let url = `${API_BASE_URL}/api/search?q=${encodeURIComponent(normQuery)}&type=${searchType}`;
+  if (minScore !== undefined && minScore !== '') url += `&minScore=${minScore}`;
+  if (maxScore !== undefined && maxScore !== '') url += `&maxScore=${maxScore}`;
 
   try {
-    const res = await fetch(`${API_BASE_URL}/api/search?q=${encodeURIComponent(normQuery)}&type=${searchType}`);
+    const res = await fetch(url);
     if (res.ok) {
       const data = await res.json();
       if (Array.isArray(data) && data.length > 0) {
@@ -58,10 +66,20 @@ export const searchStudentsAsync = async (query, searchType = 'seatNumber', cust
 
   // Fallback to customStudents array if backend API is offline
   return customStudents.filter(student => {
-    if (searchType === 'seatNumber') {
-      return normalizeArabic(student.seatNumber).includes(normQuery);
-    } else {
-      return normalizeArabic(student.name).includes(normQuery);
+    let matches = true;
+    if (normQuery) {
+      if (searchType === 'seatNumber') {
+        matches = normalizeArabic(student.seatNumber).includes(normQuery);
+      } else {
+        matches = normalizeArabic(student.name).includes(normQuery);
+      }
     }
+    if (!matches) return false;
+
+    const score = Number(student.totalScore || 0);
+    if (minScore !== undefined && minScore !== '' && score < Number(minScore)) return false;
+    if (maxScore !== undefined && maxScore !== '' && score > Number(maxScore)) return false;
+
+    return true;
   });
 };
