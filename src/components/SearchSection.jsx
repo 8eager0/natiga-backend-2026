@@ -289,10 +289,10 @@ export default function SearchSection({ onSelectStudent, customStudents = [] }) 
             )}
           </button>
 
-          {/* Adsterra Direct Link Button - Telegram / Coordination Channel */}
+          {/* Telegram Channel Link */}
           <div className="mt-3">
             <a
-              href="https://www.effectivecpmnetwork.com/gf26fn1tk?key=8dddfc9479287281950cacc886d870c2"
+              href="https://t.me/natigaa2026"
               target="_blank"
               rel="noreferrer"
               className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-sky-500 via-blue-600 to-indigo-600 hover:from-sky-600 hover:to-indigo-700 text-white font-extrabold text-sm sm:text-base shadow-md shadow-blue-500/20 transition-all flex items-center justify-center gap-2.5 border border-sky-400/30 transform hover:-translate-y-0.5"
