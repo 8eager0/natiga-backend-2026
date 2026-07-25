@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Hash, User, Sparkles, AlertCircle, ArrowLeft, CheckCircle, Send, ExternalLink, SlidersHorizontal, RotateCcw, Filter } from 'lucide-react';
+import { Search, Hash, User, Sparkles, AlertCircle, ArrowLeft, CheckCircle, Send, ExternalLink } from 'lucide-react';
 import { searchStudentsAsync } from '../data/studentsData';
 import { API_BASE_URL } from '../config';
 import AdsterraAd from './AdsterraAd';
@@ -9,9 +9,6 @@ import AdsterraDirectLink from './AdsterraDirectLink';
 export default function SearchSection({ onSelectStudent, customStudents = [] }) {
   const [searchType, setSearchType] = useState('seatNumber'); // 'seatNumber' | 'name'
   const [query, setQuery] = useState('');
-  const [minScore, setMinScore] = useState('');
-  const [maxScore, setMaxScore] = useState('');
-  const [showFilter, setShowFilter] = useState(false);
   const [results, setResults] = useState([]);
   const [hasSearched, setHasSearched] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
@@ -29,27 +26,20 @@ export default function SearchSection({ onSelectStudent, customStudents = [] }) 
 
   const handleSearch = async (e) => {
     if (e) e.preventDefault();
-    if (!query.trim() && !minScore && !maxScore) return;
+    if (!query.trim()) return;
 
     setIsSearching(true);
     setHasSearched(true);
 
-    const matched = await searchStudentsAsync(query, searchType, customStudents, { minScore, maxScore });
+    const matched = await searchStudentsAsync(query, searchType, customStudents);
     setResults(matched);
     setIsSearching(false);
 
-    // If exact seat number single match without score range filters, select directly
-    if (searchType === 'seatNumber' && matched.length === 1 && !minScore && !maxScore) {
+    // If exact seat number single match, select directly
+    if (searchType === 'seatNumber' && matched.length === 1) {
       onSelectStudent(matched[0]);
     }
   };
-
-  const handleResetFilters = () => {
-    setMinScore('');
-    setMaxScore('');
-  };
-
-  const isFilterActive = Boolean(minScore !== '' || maxScore !== '');
 
   const handleTelegramClick = (e) => {
     e.preventDefault();
@@ -148,7 +138,7 @@ export default function SearchSection({ onSelectStudent, customStudents = [] }) 
                   : 'أدخل اسم الطالب (مثال: سلمى أو أحمد)'
               }
               class="w-full pl-12 pr-12 py-4 sm:py-5 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-2xl text-lg font-bold text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-600 transition-all text-right"
-              required={!isFilterActive}
+              required
             />
 
             {query && (
@@ -162,120 +152,6 @@ export default function SearchSection({ onSelectStudent, customStudents = [] }) 
             )}
           </div>
 
-          {/* Toggle Score Filter Panel Button */}
-          <div className="flex items-center justify-between pt-1">
-            <button
-              type="button"
-              onClick={() => setShowFilter(!showFilter)}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all border ${
-                showFilter || isFilterActive
-                  ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800 shadow-sm'
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-750'
-              }`}
-            >
-              <SlidersHorizontal className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-              <span>تصفية حسب المجموع (بين كم وكم)</span>
-              {isFilterActive && (
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-              )}
-            </button>
-
-            {isFilterActive && (
-              <button
-                type="button"
-                onClick={handleResetFilters}
-                className="flex items-center gap-1 text-xs font-bold text-slate-500 hover:text-red-500 transition-colors"
-              >
-                <RotateCcw className="w-3.5 h-3.5" />
-                <span>إعادة ضبط الفلتر</span>
-              </button>
-            )}
-          </div>
-
-          {/* Expanded Score Range Filter Panel */}
-          {(showFilter || isFilterActive) && (
-            <div className="bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-2xl p-4 sm:p-5 space-y-4 animate-fadeIn">
-              <div className="flex items-center gap-2 text-xs font-extrabold text-slate-700 dark:text-slate-300">
-                <Filter className="w-4 h-4 text-emerald-600" />
-                <span>تحديد المجموع (من 0 إلى 320 درجة)</span>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5 text-right">
-                    أقل مجموع (من):
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    max="320"
-                    value={minScore}
-                    onChange={(e) => setMinScore(e.target.value)}
-                    placeholder="مثال: 100"
-                    className="w-full px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 text-right"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5 text-right">
-                    أعلى مجموع (إلى):
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    max="320"
-                    value={maxScore}
-                    onChange={(e) => setMaxScore(e.target.value)}
-                    placeholder="مثال: 200"
-                    className="w-full px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 text-right"
-                  />
-                </div>
-              </div>
-
-              {/* Quick Score Range Shortcuts */}
-              <div>
-                <span className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-2">اختصارات سريعة للمجموع:</span>
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    onClick={() => { setMinScore('288'); setMaxScore('320'); }}
-                    className="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-300 hover:border-emerald-500 transition-all"
-                  >
-                    أكثر من 90% (288-320)
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => { setMinScore('256'); setMaxScore('287'); }}
-                    className="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-300 hover:border-emerald-500 transition-all"
-                  >
-                    80% - 90% (256-287)
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => { setMinScore('224'); setMaxScore('255'); }}
-                    className="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-300 hover:border-emerald-500 transition-all"
-                  >
-                    70% - 80% (224-255)
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => { setMinScore('160'); setMaxScore('223'); }}
-                    className="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-300 hover:border-emerald-500 transition-all"
-                  >
-                    50% - 70% (160-223)
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => { setMinScore('100'); setMaxScore('200'); }}
-                    className="px-3 py-1.5 rounded-lg bg-emerald-100 dark:bg-emerald-900/60 border border-emerald-300 dark:border-emerald-700 text-xs font-extrabold text-emerald-800 dark:text-emerald-200 hover:border-emerald-500 transition-all"
-                  >
-                    مجموع بين 100 و 200
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
           {/* Adsterra Native Banner (300x250) Container - Slot 1 (Between Input and Submit Button) */}
           <div className="my-6 flex justify-center items-center overflow-hidden min-h-[250px] rounded-2xl bg-slate-50/50 dark:bg-slate-800/20 py-2">
             <AdsterraAd adKey="1f517a72be5215de5a96e2a8439c8139" width={300} height={250} />
@@ -284,13 +160,13 @@ export default function SearchSection({ onSelectStudent, customStudents = [] }) 
           {/* Instant Submit Button */}
           <button
             type="submit"
-            disabled={isSearching || (!query.trim() && !isFilterActive)}
+            disabled={isSearching || !query.trim()}
             class="w-full py-4 rounded-2xl bg-gradient-to-r from-emerald-600 via-emerald-700 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white font-extrabold text-lg shadow-lg shadow-emerald-600/30 transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed transform hover:-translate-y-0.5 active:translate-y-0"
           >
             {isSearching ? (
               <>
                 <span class="w-6 h-6 border-3 border-white border-t-transparent rounded-full animate-spin"></span>
-                <span>جاري البحث وتطبيق الفلتر...</span>
+                <span>جاري البحث...</span>
               </>
             ) : (
               <>
