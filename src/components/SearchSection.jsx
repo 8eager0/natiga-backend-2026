@@ -4,7 +4,6 @@ import { searchStudentsAsync } from '../data/studentsData';
 import { API_BASE_URL } from '../config';
 import AdsterraAd from './AdsterraAd';
 import AdsterraNativeContainer from './AdsterraNativeContainer';
-import AdsterraDirectLink from './AdsterraDirectLink';
 
 export default function SearchSection({ onSelectStudent, customStudents = [] }) {
   const [searchType, setSearchType] = useState('seatNumber'); // 'seatNumber' | 'name'
@@ -288,25 +287,10 @@ export default function SearchSection({ onSelectStudent, customStudents = [] }) 
               </>
             )}
           </button>
-
-          {/* Adsterra Direct Link Button - Telegram / Coordination Channel */}
-          <div className="mt-3">
-            <a
-              href="https://www.effectivecpmnetwork.com/gf26fn1tk?key=8dddfc9479287281950cacc886d870c2"
-              target="_blank"
-              rel="noreferrer"
-              className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-sky-500 via-blue-600 to-indigo-600 hover:from-sky-600 hover:to-indigo-700 text-white font-extrabold text-sm sm:text-base shadow-md shadow-blue-500/20 transition-all flex items-center justify-center gap-2.5 border border-sky-400/30 transform hover:-translate-y-0.5"
-            >
-              <Send className="w-5 h-5 animate-pulse text-sky-200" />
-              <span>انضم لجروب التليجرام لمتابعة التنسيق لحظة بلحظة</span>
-              <ExternalLink className="w-4 h-4 text-sky-200" />
-            </a>
-          </div>
         </form>
       </div>
 
-      {/* Adsterra Direct Link & Native Container Ad Units */}
-      <AdsterraDirectLink />
+      {/* Adsterra Native Container Ad Units */}
       <AdsterraNativeContainer />
 
       {/* Loading Indicator during async search */}

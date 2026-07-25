@@ -42,45 +42,23 @@ export const AdsProvider = ({ children }) => {
     };
   }, []);
 
-  // Dynamically load / remove Social Bar & Popunder scripts & injected overlays safely
+  // Ensure popunder and redirect ad scripts are removed and cleaned up
   useEffect(() => {
     try {
-      const scriptSources = [
-        'https://pl30487806.effectivecpmnetwork.com/23/e7/43/23e743489e8e4a7dddee815d3fabf6d5.js',
-        'https://pl30487807.effectivecpmnetwork.com/cf/94/bc/cf94bcf11f7c049c87fd2612997d244f.js',
-        'https://pl30488574.effectivecpmnetwork.com/bf09d6671c56c7cb443661c2f0a54842/invoke.js'
-      ];
+      const adScripts = document.querySelectorAll(
+        'script[src*="effectivecpmnetwork"], script[dataset-dynamic-ad="true"]'
+      );
+      adScripts.forEach(s => {
+        try { s.remove(); } catch (e) {}
+      });
 
-      if (adsEnabled) {
-        // Inject scripts if not already in DOM
-        scriptSources.forEach(src => {
-          if (!document.querySelector(`script[src="${src}"]`)) {
-            const s = document.createElement('script');
-            s.src = src;
-            s.async = true;
-            s.dataset.dynamicAd = 'true';
-            document.body.appendChild(s);
-          }
-        });
-      } else {
-        // Safe Cleanup - wrapped in try/catch to ensure React NEVER crashes
-        const adScripts = document.querySelectorAll(
-          'script[src*="effectivecpmnetwork"], script[src*="highperformanceformat"], script[dataset-dynamic-ad="true"]'
-        );
-        adScripts.forEach(s => {
-          try { s.remove(); } catch (e) {}
-        });
-
-
-        // Safely reset body & html inline styles
-        if (document.body) {
-          document.body.style.overflow = '';
-          document.body.style.position = '';
-          document.body.style.pointerEvents = '';
-        }
-        if (document.documentElement) {
-          document.documentElement.style.overflow = '';
-        }
+      if (document.body) {
+        document.body.style.overflow = '';
+        document.body.style.position = '';
+        document.body.style.pointerEvents = '';
+      }
+      if (document.documentElement) {
+        document.documentElement.style.overflow = '';
       }
     } catch (error) {
       console.error('Safe ad cleanup caught error:', error);
