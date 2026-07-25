@@ -547,6 +547,10 @@ app.post('/admin/data/upload-finish', authMiddleware, async (req, res) => {
       }
     } catch (e) {}
 
+    if (global.gc) {
+      try { global.gc(); } catch (e) {}
+    }
+
     console.log(`✅ Chunked bulk import finished: ${newStudents.length} students loaded`);
 
     return res.json({

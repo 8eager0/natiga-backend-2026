@@ -8,12 +8,12 @@
   },
   "scripts": {
     "postinstall": "node scripts/buildSqliteDb.js",
-    "start": "node admin-server.js",
+    "start": "node --max-old-space-size=460 --expose-gc admin-server.js",
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "admin": "node admin-server.js",
-    "server": "node server.js"
+    "admin": "node --max-old-space-size=460 --expose-gc admin-server.js",
+    "server": "node --max-old-space-size=460 --expose-gc server.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
