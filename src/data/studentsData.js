@@ -39,7 +39,7 @@ export const calculateStudentStats = (student) => {
 
 import { API_BASE_URL } from '../config';
 
-// Async API search against 810,980 RAM Indexed backend
+// Async API search against backend database
 export const searchStudentsAsync = async (query, searchType = 'seatNumber', customStudents = [], filters = {}) => {
   const normQuery = normalizeArabic(query);
   const { minScore, maxScore } = filters;
@@ -56,30 +56,13 @@ export const searchStudentsAsync = async (query, searchType = 'seatNumber', cust
     const res = await fetch(url);
     if (res.ok) {
       const data = await res.json();
-      if (Array.isArray(data) && data.length > 0) {
+      if (Array.isArray(data)) {
         return data;
       }
     }
   } catch (err) {
-    console.warn('Backend API offline, falling back to in-memory custom data', err);
+    console.warn('Backend API search:', err);
   }
 
-  // Fallback to customStudents array if backend API is offline
-  return customStudents.filter(student => {
-    let matches = true;
-    if (normQuery) {
-      if (searchType === 'seatNumber') {
-        matches = normalizeArabic(student.seatNumber).includes(normQuery);
-      } else {
-        matches = normalizeArabic(student.name).includes(normQuery);
-      }
-    }
-    if (!matches) return false;
-
-    const score = Number(student.totalScore || 0);
-    if (minScore !== undefined && minScore !== '' && score < Number(minScore)) return false;
-    if (maxScore !== undefined && maxScore !== '' && score > Number(maxScore)) return false;
-
-    return true;
-  });
+  return [];
 };
