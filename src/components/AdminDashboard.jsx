@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 
 import { API_BASE_URL } from '../config';
+import * as XLSX from 'xlsx';
 
 const ADMIN_API = API_BASE_URL;
 
@@ -294,30 +295,123 @@ export default function AdminDashboard() {
   useEffect(() => { if (token && activeTab === 'monitor') fetchMonitor(); }, [activeTab]);
 
   // ----------------------------------------------------------
-  // Excel Upload Handler
+  // Excel Upload Handler (Smart Chunked Batch Upload for 29MB+ files)
   // ----------------------------------------------------------
   const handleExcelUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
     setLoad('upload', true);
-    addToast(`جاري رفع الملف: ${file.name}...`, 'info');
+    addToast(`جاري معالجة وقراءة الملف (${(file.size / 1024 / 1024).toFixed(1)} MB)...`, 'info');
 
     try {
-      const formData = new FormData();
-      formData.append('excelFile', file);
-      const res = await fetch(`${ADMIN_API}/admin/data/upload-excel`, {
+      // 1. For small files (<= 3MB), try direct backend upload first
+      if (file.size <= 3 * 1024 * 1024) {
+        const formData = new FormData();
+        formData.append('excelFile', file);
+        const res = await fetch(`${ADMIN_API}/admin/data/upload-excel`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` },
+          body: formData
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          addToast(data.message, 'success');
+          fetchDashboard();
+          setLoad('upload', false);
+          if (fileInputRef.current) fileInputRef.current.value = '';
+          return;
+        }
+      }
+
+      // 2. For large files (29MB+), parse locally in browser & send chunked batches
+      addToast('جاري قراءة وتجهيز شيت الطلاب في المتصفح...', 'info');
+      const arrayBuffer = await file.arrayBuffer();
+      const workbook = XLSX.read(arrayBuffer, { type: 'array', dense: true });
+      const sheetName = workbook.SheetNames[0];
+      const matrix = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { header: 1, defval: '' });
+
+      let headerRowIndex = 0;
+      for (let i = 0; i < Math.min(matrix.length, 10); i++) {
+        const rowStr = (matrix[i] || []).map(c => String(c || '').toLowerCase()).join(' ');
+        if (rowStr.includes('جلوس') || rowStr.includes('اسم') || rowStr.includes('seating') || rowStr.includes('name')) {
+          headerRowIndex = i;
+          break;
+        }
+      }
+
+      const headers = (matrix[headerRowIndex] || []).map(h => String(h).trim());
+      const dataRows = matrix.slice(headerRowIndex + 1).filter(row => row && row.some(c => c !== '' && c !== null));
+
+      const norm = (s) => String(s || '').trim().toLowerCase();
+      const findCol = (keys) => headers.findIndex(h => keys.some(k => norm(h).includes(norm(k))));
+
+      const seatCol = findCol(['جلوس', 'seating', 'seat']);
+      const nameCol = findCol(['اسم', 'name']);
+      const totalCol = findCol(['مجموع', 'degree', 'total']);
+
+      const parsedStudents = [];
+      for (let i = 0; i < dataRows.length; i++) {
+        const row = dataRows[i];
+        const seatRaw = String(row[seatCol] || '').trim();
+        const name = String(row[nameCol] || '').trim();
+        const total = parseFloat(String(row[totalCol] || '0').replace(/,/g, '.')) || 0;
+        const percentage = parseFloat(((total / 320) * 100).toFixed(2));
+        const status = percentage >= 50 ? 'ناجح' : 'راسب';
+
+        if (seatRaw && name) {
+          parsedStudents.push({ seatNumber: seatRaw, name, totalScore: total, percentage, status });
+        }
+      }
+
+      if (parsedStudents.length === 0) {
+        addToast('لم يتم العثور على أسطر طلاب صالحة في شيت الـ Excel.', 'error');
+        setLoad('upload', false);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+        return;
+      }
+
+      addToast(`تمت قراءة ${parsedStudents.length.toLocaleString('ar')} طالب. جاري بدء رفع الدفعات إلى السيرفر...`, 'info');
+
+      // Init chunked upload session
+      await fetch(`${ADMIN_API}/admin/data/upload-start`, {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` },
-        body: formData
+        headers: authHeaders(token)
       });
-      const data = await res.json();
-      if (res.ok && data.success) {
-        addToast(data.message, 'success');
+
+      // Upload in chunks of 20,000
+      const chunkSize = 20000;
+      for (let i = 0; i < parsedStudents.length; i += chunkSize) {
+        const chunk = parsedStudents.slice(i, i + chunkSize);
+        const chunkRes = await fetch(`${ADMIN_API}/admin/data/upload-chunk`, {
+          method: 'POST',
+          headers: authHeaders(token),
+          body: JSON.stringify({ students: chunk })
+        });
+        if (!chunkRes.ok) {
+          throw new Error('فشل رفع إحدى دفعات البيانات.');
+        }
+        const pct = Math.min(100, Math.round(((i + chunk.length) / parsedStudents.length) * 100));
+        addToast(`جاري الرفع لـ ${parsedStudents.length.toLocaleString('ar')} طالب: ${pct}% (${Math.min(i + chunkSize, parsedStudents.length).toLocaleString('ar')})`, 'info');
+      }
+
+      // Finish session
+      const finishRes = await fetch(`${ADMIN_API}/admin/data/upload-finish`, {
+        method: 'POST',
+        headers: authHeaders(token)
+      });
+      const finishData = await finishRes.json();
+
+      if (finishRes.ok && finishData.success) {
+        addToast(finishData.message || `تم رفع وحفظ ${parsedStudents.length.toLocaleString('ar')} طالب بنجاح!`, 'success');
         fetchDashboard();
       } else {
-        addToast(data.error || 'فشل رفع الملف.', 'error');
+        addToast(finishData.error || 'فشل إكمال حفظ البيانات.', 'error');
       }
-    } catch { addToast('خطأ في الاتصال بالخادم.', 'error'); }
+    } catch (err) {
+      console.error('Excel processing error:', err);
+      addToast(err.message || 'خطأ في الاتصال بالخادم أثناء الرفع.', 'error');
+    }
+
     setLoad('upload', false);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };

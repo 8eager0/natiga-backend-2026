@@ -47,7 +47,8 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'X-XSS-Protection'],
   optionsSuccessStatus: 200
 }));
-app.use(express.json());
+app.use(express.json({ limit: '100mb' }));
+app.use(express.urlencoded({ limit: '100mb', extended: true }));
 
 const ADMIN_PORT = process.env.PORT || process.env.ADMIN_PORT || 4000;
 const JWT_SECRET = process.env.JWT_SECRET || 'natiga_super_secret_jwt_key_2026_change_in_production';
@@ -501,6 +502,61 @@ app.post('/admin/data/upload-excel', authMiddleware, upload.single('excelFile'),
   } catch (err) {
     console.error('Upload error:', err);
     return res.status(500).json({ error: `حدث خطأ أثناء معالجة الملف: ${err.message}` });
+  }
+});
+
+// ----------------------------------------------------------
+// [B2] رفع البيانات على دفعات (Chunked Batch Upload for 29MB+ files)
+// ----------------------------------------------------------
+let uploadStagingBatch = [];
+
+app.post('/admin/data/upload-start', authMiddleware, (req, res) => {
+  uploadStagingBatch = [];
+  console.log(`🚀 Chunked upload session initialized by ${req.adminUser.username}`);
+  return res.json({ success: true, message: 'Upload session initialized' });
+});
+
+app.post('/admin/data/upload-chunk', authMiddleware, (req, res) => {
+  const { students } = req.body;
+  if (!Array.isArray(students)) {
+    return res.status(400).json({ error: 'دفعة البيانات غير صالحة.' });
+  }
+  uploadStagingBatch.push(...students);
+  return res.json({ success: true, totalLoadedSoFar: uploadStagingBatch.length });
+});
+
+app.post('/admin/data/upload-finish', authMiddleware, async (req, res) => {
+  try {
+    const newStudents = uploadStagingBatch;
+    uploadStagingBatch = [];
+
+    studentsArray = newStudents;
+    seatMap.clear();
+    for (const st of studentsArray) {
+      if (st.seatNumber) seatMap.set(normalizeArabic(st.seatNumber), st);
+    }
+
+    try {
+      fs.writeFileSync(dataPath, JSON.stringify(newStudents, null, 0));
+    } catch(e) {}
+
+    try {
+      if (redisClient.isOpen) {
+        await redisClient.flushAll();
+        console.log('✅ Redis cache flushed after chunked upload');
+      }
+    } catch (e) {}
+
+    console.log(`✅ Chunked bulk import finished: ${newStudents.length} students loaded`);
+
+    return res.json({
+      success: true,
+      imported: newStudents.length,
+      message: `تم رفع وإدخال ${newStudents.length.toLocaleString('ar')} طالب بنجاح!`
+    });
+  } catch (err) {
+    console.error('Upload finish error:', err);
+    return res.status(500).json({ error: `خطأ أثناء إنهاء الرفع: ${err.message}` });
   }
 });
 
