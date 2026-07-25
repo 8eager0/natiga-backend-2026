@@ -533,7 +533,8 @@ app.post('/admin/data/upload-finish', authMiddleware, async (req, res) => {
     studentsArray = newStudents;
     seatMap.clear();
     for (const st of studentsArray) {
-      if (st.seatNumber) seatMap.set(normalizeArabic(st.seatNumber), st);
+      const seat = Array.isArray(st) ? st[0] : (st.seatNumber || st.seat_number);
+      if (seat) seatMap.set(normalizeArabic(seat), st);
     }
 
     try {
@@ -910,7 +911,20 @@ app.get('/api/result/:seatNumber', resultSearchLimiter, async (req, res) => {
     }
 
     if (!studentResult && seatMap.has(normalizeArabic(sSeat))) {
-      studentResult = seatMap.get(normalizeArabic(sSeat));
+      const raw = seatMap.get(normalizeArabic(sSeat));
+      if (Array.isArray(raw)) {
+        const total = parseFloat(raw[2]) || 0;
+        const pct = parseFloat(raw[3]) || parseFloat(((total / 320) * 100).toFixed(2));
+        studentResult = {
+          seatNumber: String(raw[0]),
+          name: String(raw[1]),
+          totalScore: total,
+          percentage: pct,
+          status: pct >= 50 ? 'ناجح' : 'راسب'
+        };
+      } else {
+        studentResult = raw;
+      }
     }
 
     if (!studentResult) {

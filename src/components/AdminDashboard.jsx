@@ -13,8 +13,24 @@ import * as XLSX from 'xlsx';
 const ADMIN_API = API_BASE_URL;
 
 // ============================================================
-// Utility: توليد رأس JWT للطلبات المصادق عليها
+// Utility: طلبات الشبكة مع إعادة المحاولة التلقائية عند انقطاع الاتصال
 // ============================================================
+const fetchWithRetry = async (url, options = {}, retries = 5, backoff = 1000) => {
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      const res = await fetch(url, options);
+      if (res.ok) return res;
+      if (res.status >= 500 && attempt < retries) {
+        await new Promise(r => setTimeout(r, backoff * attempt));
+        continue;
+      }
+      return res;
+    } catch (err) {
+      if (attempt === retries) throw err;
+      await new Promise(r => setTimeout(r, backoff * attempt));
+    }
+  }
+};
 const authHeaders = (token) => ({
   'Authorization': `Bearer ${token}`,
   'Content-Type': 'application/json',
@@ -356,10 +372,10 @@ export default function AdminDashboard() {
         const name = String(row[nameCol] || '').trim();
         const total = parseFloat(String(row[totalCol] || '0').replace(/,/g, '.')) || 0;
         const percentage = parseFloat(((total / 320) * 100).toFixed(2));
-        const status = percentage >= 50 ? 'ناجح' : 'راسب';
 
         if (seatRaw && name) {
-          parsedStudents.push({ seatNumber: seatRaw, name, totalScore: total, percentage, status });
+          // Compact array encoding: [seatNumber, name, totalScore, percentage]
+          parsedStudents.push([seatRaw, name, total, percentage]);
         }
       }
 
@@ -370,35 +386,38 @@ export default function AdminDashboard() {
         return;
       }
 
-      addToast(`تمت قراءة ${parsedStudents.length.toLocaleString('ar')} طالب. جاري بدء رفع الدفعات إلى السيرفر...`, 'info');
+      addToast(`تمت قراءة ${parsedStudents.length.toLocaleString('ar')} طالب بنجاح. جاري بدء الرفع السريع والآمن...`, 'info');
 
       // Init chunked upload session
-      await fetch(`${ADMIN_API}/admin/data/upload-start`, {
+      await fetchWithRetry(`${ADMIN_API}/admin/data/upload-start`, {
         method: 'POST',
         headers: authHeaders(token)
       });
 
-      // Upload in chunks of 20,000
-      const chunkSize = 20000;
+      // Upload in lightweight compact chunks of 10,000 students
+      const chunkSize = 10000;
       for (let i = 0; i < parsedStudents.length; i += chunkSize) {
         const chunk = parsedStudents.slice(i, i + chunkSize);
-        const chunkRes = await fetch(`${ADMIN_API}/admin/data/upload-chunk`, {
+        const chunkRes = await fetchWithRetry(`${ADMIN_API}/admin/data/upload-chunk`, {
           method: 'POST',
           headers: authHeaders(token),
           body: JSON.stringify({ students: chunk })
         });
-        if (!chunkRes.ok) {
-          throw new Error('فشل رفع إحدى دفعات البيانات.');
+        if (!chunkRes || !chunkRes.ok) {
+          throw new Error('تعذر إرسال إحدى الدفعات، جاري إلغاء الرفع.');
         }
         const pct = Math.min(100, Math.round(((i + chunk.length) / parsedStudents.length) * 100));
-        addToast(`جاري الرفع لـ ${parsedStudents.length.toLocaleString('ar')} طالب: ${pct}% (${Math.min(i + chunkSize, parsedStudents.length).toLocaleString('ar')})`, 'info');
+        addToast(`جاري الرفع بنجاح: ${pct}% (${Math.min(i + chunkSize, parsedStudents.length).toLocaleString('ar')} / ${parsedStudents.length.toLocaleString('ar')})`, 'info');
       }
 
-      // Finish session
-      const finishRes = await fetch(`${ADMIN_API}/admin/data/upload-finish`, {
+      addToast('تم رفع جميع الدفعات! جاري حفظ البيانات على السيرفر ومسح الكاش...', 'info');
+
+      // Finish session with retry logic
+      const finishRes = await fetchWithRetry(`${ADMIN_API}/admin/data/upload-finish`, {
         method: 'POST',
         headers: authHeaders(token)
-      });
+      }, 5, 2000);
+
       const finishData = await finishRes.json();
 
       if (finishRes.ok && finishData.success) {
