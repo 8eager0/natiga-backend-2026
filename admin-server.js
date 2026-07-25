@@ -168,9 +168,40 @@ const normalizeArabic = (text) => {
     .toLowerCase();
 };
 
-// إعداد قاعدة البيانات في الذاكرة (fallback)
-const leadsDB = [];
+// ملف التخزين الدائم لبيانات الطلاب المسجلين (Leads)
+const LEADS_FILE_PATH = path.resolve('database/leads.json');
+let leadsDB = [];
 let leadsIdCounter = 1;
+
+// تحميل بيانات الطلاب المسجلين سابقت من ملف JSON الدائم عند تشغيل السيرفر
+try {
+  const dir = path.dirname(LEADS_FILE_PATH);
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  if (fs.existsSync(LEADS_FILE_PATH)) {
+    const raw = fs.readFileSync(LEADS_FILE_PATH, 'utf-8');
+    leadsDB = JSON.parse(raw);
+    if (Array.isArray(leadsDB) && leadsDB.length > 0) {
+      const maxId = Math.max(...leadsDB.map(l => Number(l.id || 0)));
+      leadsIdCounter = maxId + 1;
+      console.log(`✅ Loaded ${leadsDB.length} persisted leads from database/leads.json`);
+    }
+  } else {
+    fs.writeFileSync(LEADS_FILE_PATH, JSON.stringify([], null, 2), 'utf-8');
+  }
+} catch (e) {
+  console.warn('⚠️ Error reading database/leads.json:', e.message);
+  leadsDB = [];
+}
+
+const saveLeadsToDisk = () => {
+  try {
+    const dir = path.dirname(LEADS_FILE_PATH);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(LEADS_FILE_PATH, JSON.stringify(leadsDB, null, 2), 'utf-8');
+  } catch (e) {
+    console.warn('⚠️ Error writing database/leads.json:', e.message);
+  }
+};
 
 // إعدادات الموقع الافتراضية
 let siteSettings = {
@@ -757,6 +788,7 @@ app.post('/api/leads', async (req, res) => {
   }
 
   leadsDB.push({ id: leadId, studentName: sName, student_name: sName, phoneNumber: wNum, whatsapp_number: wNum, seatNumber: sSeat, seat_number: sSeat, governorate: gov, preferredBranch: branch, academic_branch: branch, totalScore: total_score, total_score, percentage, createdAt, created_at: createdAt });
+  saveLeadsToDisk();
 
   return res.json({
     success: true,

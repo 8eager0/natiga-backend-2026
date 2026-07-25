@@ -152,20 +152,45 @@ app.post('/api/leads', async (req, res) => {
   }
 
   try {
-    // إدخال البيانات في جدول university_leads
-    const query = `
-      INSERT INTO university_leads (student_name, phone_number, seat_number, total_score, percentage, preferred_branch)
-      VALUES ($1, $2, $3, $4, $5, $6)
-      RETURNING id;
-    `;
-    const values = [studentName, phoneNumber, seatNumber || '', totalScore || 0, percentage || 0, preferredBranch || ''];
-    
+    const LEADS_FILE_PATH = path.resolve('database/leads.json');
     let leadId = Date.now();
     try {
+      const query = `
+        INSERT INTO university_leads (student_name, phone_number, seat_number, total_score, percentage, preferred_branch)
+        VALUES ($1, $2, $3, $4, $5, $6)
+        RETURNING id;
+      `;
+      const values = [studentName, phoneNumber, seatNumber || '', totalScore || 0, percentage || 0, preferredBranch || ''];
       const dbRes = await pool.query(query, values);
       leadId = dbRes.rows[0].id;
     } catch (dbErr) {
       console.warn('DB Insert fallback mode active');
+    }
+
+    // Save lead to persistent database/leads.json file
+    try {
+      const dir = path.dirname(LEADS_FILE_PATH);
+      if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+      let existingLeads = [];
+      if (fs.existsSync(LEADS_FILE_PATH)) {
+        existingLeads = JSON.parse(fs.readFileSync(LEADS_FILE_PATH, 'utf-8'));
+      }
+      existingLeads.push({
+        id: leadId,
+        studentName,
+        student_name: studentName,
+        phoneNumber,
+        whatsapp_number: phoneNumber,
+        seatNumber: seatNumber || '',
+        seat_number: seatNumber || '',
+        totalScore: totalScore || 0,
+        percentage: percentage || 0,
+        preferredBranch: preferredBranch || '',
+        createdAt: new Date().toISOString()
+      });
+      fs.writeFileSync(LEADS_FILE_PATH, JSON.stringify(existingLeads, null, 2), 'utf-8');
+    } catch (fsErr) {
+      console.warn('Failed writing to database/leads.json:', fsErr.message);
     }
 
     return res.json({
