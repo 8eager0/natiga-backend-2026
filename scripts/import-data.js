@@ -17,18 +17,38 @@ const pool = new Pool({
     : false,
 });
 
-// 2. البحث التلقائي عن ملف الـ CSV في المجلد الحالي
+// 2. البحث التلقائي عن ملف الـ CSV في مجلد data أو المجلد الرئيسي
 function findCsvFile() {
   const argFile = process.argv[2];
   if (argFile && fs.existsSync(argFile)) {
     return path.resolve(argFile);
   }
 
-  const rootFiles = fs.readdirSync('.');
-  const csvFiles = rootFiles.filter(f => f.toLowerCase().endsWith('.csv'));
+  const priorityPaths = [
+    'data/students.csv',
+    'src/data/students.csv',
+    'data/نتيجة الثانوية العامة 2025.csv',
+    'نتيجة الثانوية العامة 2025.csv'
+  ];
 
-  if (csvFiles.length > 0) {
-    return path.resolve(csvFiles[0]);
+  for (const p of priorityPaths) {
+    if (fs.existsSync(p)) {
+      return path.resolve(p);
+    }
+  }
+
+  // البحث في مجلد data إن وجد
+  if (fs.existsSync('data')) {
+    const dataFiles = fs.readdirSync('data').filter(f => f.toLowerCase().endsWith('.csv'));
+    if (dataFiles.length > 0) {
+      return path.resolve('data', dataFiles[0]);
+    }
+  }
+
+  // البحث في المجلد الرئيسي
+  const rootFiles = fs.readdirSync('.').filter(f => f.toLowerCase().endsWith('.csv'));
+  if (rootFiles.length > 0) {
+    return path.resolve(rootFiles[0]);
   }
 
   return null;
