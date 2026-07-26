@@ -1,8 +1,15 @@
+import dns from 'node:dns';
+if (dns.setDefaultResultOrder) {
+  dns.setDefaultResultOrder('ipv4first');
+}
 import fs from 'fs';
 import path from 'path';
 import readline from 'readline';
 import pkg from 'pg';
 const { Pool } = pkg;
+
+// إجبار مكتبة pg ونظام DNS على استخدام شبكة IPv4 فقط لمنع خطأ ENETUNREACH في منصة Render
+pkg.defaults.family = 4;
 
 // 1. الاتصال بقاعدة البيانات المدارة (PostgreSQL Database Connection)
 const connectionString = process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/natiga_db';

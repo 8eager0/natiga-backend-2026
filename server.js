@@ -1,3 +1,7 @@
+import dns from 'node:dns';
+if (dns.setDefaultResultOrder) {
+  dns.setDefaultResultOrder('ipv4first');
+}
 import express from 'express';
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
@@ -8,6 +12,9 @@ import os from 'node:os';
 import NodeCache from 'node-cache';
 import pkg from 'pg';
 const { Pool } = pkg;
+
+// إجبار مكتبة pg ونظام DNS على استخدام شبكة IPv4 فقط لمنع خطأ ENETUNREACH في منصة Render
+pkg.defaults.family = 4;
 
 const PORT = process.env.PORT || 3001;
 
