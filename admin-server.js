@@ -956,11 +956,31 @@ app.get('/admin/monitor', authMiddleware, async (req, res) => {
     }, 100);
   });
 
-  const uptimeSeconds = os.uptime();
-  const uptimeDays = Math.floor(uptimeSeconds / 86400);
-  const uptimeHours = Math.floor((uptimeSeconds % 86400) / 3600);
-  const uptimeMinutes = Math.floor((uptimeSeconds % 3600) / 60);
-
+  return res.json({
+    cpu: {
+      model: os.cpus()[0]?.model || 'Unknown',
+      cores: os.cpus().length,
+      usagePercent: parseFloat(cpuUsage),
+      architecture: os.arch()
+    },
+    memory: {
+      total: `${(totalMem / 1024 / 1024 / 1024).toFixed(2)} GB`,
+      used: `${(usedMem / 1024 / 1024 / 1024).toFixed(2)} GB`,
+      free: `${(freeMem / 1024 / 1024 / 1024).toFixed(2)} GB`,
+      usagePercent: parseFloat(memUsagePercent)
+    },
+    system: {
+      platform: os.platform(),
+      hostname: os.hostname(),
+      uptime: `${uptimeDays} يوم، ${uptimeHours} ساعة، ${uptimeMinutes} دقيقة`,
+      nodeVersion: process.version,
+      pid: process.pid
+    },
+    database: {
+      studentsLoaded: studentsArray.length,
+      leadsCount: (typeof leadsDB !== 'undefined' && Array.isArray(leadsDB)) ? leadsDB.length : 0,
+      dataFileExists: fs.existsSync(dataPath)
+    },
     redis: { status: 'Node-Cache مفعل', memory: 'RAM' },
     timestamp: new Date().toISOString()
   });
