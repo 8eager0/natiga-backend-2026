@@ -42,34 +42,7 @@ export const AdsProvider = ({ children }) => {
     };
   }, []);
 
-  // Ensure popunder and auto-redirect ad scripts are continuously cleaned up
-  useEffect(() => {
-    const cleanAdPopunders = () => {
-      try {
-        const adScripts = document.querySelectorAll(
-          'script[src*="effectivecpmnetwork"]:not(iframe script), script[dataset-dynamic-ad="true"]'
-        );
-        adScripts.forEach(s => {
-          try { s.remove(); } catch (e) {}
-        });
 
-        if (document.body) {
-          document.body.style.overflow = '';
-          document.body.style.position = '';
-          document.body.style.pointerEvents = '';
-        }
-        if (document.documentElement) {
-          document.documentElement.style.overflow = '';
-        }
-      } catch (error) {
-        console.error('Safe ad cleanup caught error:', error);
-      }
-    };
-
-    cleanAdPopunders();
-    const interval = setInterval(cleanAdPopunders, 2000);
-    return () => clearInterval(interval);
-  }, [adsEnabled]);
 
   return (
     <AdsContext.Provider value={{ adsEnabled }}>
