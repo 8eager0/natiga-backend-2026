@@ -6,7 +6,7 @@ export default function AdsterraAd({ adKey, width, height, format = 'iframe', cl
   const { adsEnabled } = useAds();
   const [inView, setInView] = useState(false);
 
-  const [refreshKey, setRefreshKey] = useState(0);
+
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -23,14 +23,10 @@ export default function AdsterraAd({ adKey, width, height, format = 'iframe', cl
     return () => observer.disconnect();
   }, []);
 
-  // Periodic ad refresh every 35s when visible to multiply impressions
-  useEffect(() => {
-    if (!adsEnabled || !inView) return;
-    const interval = setInterval(() => {
-      setRefreshKey(prev => prev + 1);
-    }, 35 * 1000);
-    return () => clearInterval(interval);
-  }, [adsEnabled, inView]);
+  // NOTE: Ad auto-refresh was removed.
+  // Periodically re-rendering ad units via setRefreshKey every 35s
+  // is against Adsterra's policy and can trigger click fraud detection.
+  // Impressions should be counted naturally by the ad network itself.
 
   useEffect(() => {
     if (!adsEnabled || !inView) return;
@@ -60,7 +56,7 @@ export default function AdsterraAd({ adKey, width, height, format = 'iframe', cl
 </html>`;
 
       if (containerRef.current) {
-        containerRef.current.innerHTML = `<iframe key="${refreshKey}" srcdoc="${htmlContent.replace(/"/g, '&quot;')}" width="${width}" height="${height}" style="border:none; overflow:hidden;" scrolling="no" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"></iframe>`;
+        containerRef.current.innerHTML = `<iframe srcdoc="${htmlContent.replace(/"/g, '&quot;')}" width="${width}" height="${height}" style="border:none; overflow:hidden;" scrolling="no" sandbox="allow-scripts allow-same-origin"></iframe>`;
       }
     };
 
@@ -71,7 +67,7 @@ export default function AdsterraAd({ adKey, width, height, format = 'iframe', cl
       const timeoutId = setTimeout(renderAd, 150);
       return () => clearTimeout(timeoutId);
     }
-  }, [adKey, width, height, format, adsEnabled, inView, refreshKey]);
+  }, [adKey, width, height, format, adsEnabled, inView]);
 
   if (!adsEnabled) return null;
 

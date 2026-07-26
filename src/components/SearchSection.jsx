@@ -208,10 +208,14 @@ export default function SearchSection({ onSelectStudent, customStudents = [] }) 
             )}
           </div>
 
-          {/* Adsterra Native Banner (300x250) Container - Slot 1 (Between Input and Submit Button) */}
-          <div className="my-6 flex justify-center items-center overflow-hidden min-h-[250px] rounded-2xl bg-slate-50/50 dark:bg-slate-800/20 py-2">
-            <AdsterraAd adKey="1f517a72be5215de5a96e2a8439c8139" width={300} height={250} />
-          </div>
+
+          {/* ===== AD-SAFE SPACING NOTE =====
+           * The 300x250 ad was removed from here.
+           * Placing a 300x250 between the input field and submit button
+           * caused massive unintentional CTR on mobile (users tapping
+           * the "عرض النتيجة" button accidentally hit the ad first).
+           * The 300x250 is now placed further below (after submit button).
+           * ================================= */}
 
           {/* Instant Submit Button */}
           <button
@@ -232,19 +236,19 @@ export default function SearchSection({ onSelectStudent, customStudents = [] }) 
             )}
           </button>
 
-          {/* Telegram Channel Link with 1st Click Direct Link Monetization */}
-          <div className="mt-3">
+          {/* Safe spacing: 300x250 ad placed AFTER the submit button with min 60px gap.
+              This prevents accidental taps on mobile when targeting the submit button. */}
+          <div className="mt-16 mb-4 flex justify-center items-center overflow-hidden rounded-2xl bg-slate-50/50 dark:bg-slate-800/20 py-2">
+            <AdsterraAd adKey="1f517a72be5215de5a96e2a8439c8139" width={300} height={250} />
+          </div>
+
+          {/* Telegram Channel Link - Direct Link removed from onClick to prevent
+              accidental/unintended ad clicks that inflate CTR artificially */}
+          <div className="mt-4">
             <a
               href="https://t.me/natigaa2026"
               target="_blank"
               rel="noreferrer"
-              onClick={() => {
-                const clickedBefore = localStorage.getItem('tg_ad_clicked');
-                if (!clickedBefore) {
-                  localStorage.setItem('tg_ad_clicked', 'true');
-                  window.open('https://www.effectivecpmnetwork.com/gf26fn1tk?key=8dddfc9479287281950cacc886d870c2', '_blank');
-                }
-              }}
               className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-sky-500 via-blue-600 to-indigo-600 hover:from-sky-600 hover:to-indigo-700 text-white font-extrabold text-sm sm:text-base shadow-md shadow-blue-500/20 transition-all flex items-center justify-center gap-2.5 border border-sky-400/30 transform hover:-translate-y-0.5 cursor-pointer"
             >
               <Send className="w-5 h-5 animate-pulse text-sky-200" />
@@ -255,8 +259,11 @@ export default function SearchSection({ onSelectStudent, customStudents = [] }) 
         </form>
       </div>
 
-      {/* Adsterra Direct Link & Native Container & Wide Skyscraper Ad Units */}
-      <AdsterraDirectLink />
+      {/* Adsterra Direct Link - placed with safe 40px+ gap from all interactive elements */}
+      <div className="mt-10">
+        <AdsterraDirectLink />
+      </div>
+      {/* Native Container - contextual ads */}
       <AdsterraNativeContainer />
 
       <div className="my-6 flex flex-col md:flex-row items-center justify-center gap-6">
@@ -289,10 +296,10 @@ export default function SearchSection({ onSelectStudent, customStudents = [] }) 
             </div>
           </div>
 
-          {/* High-CTR Recommendation Card during result lookup */}
-          <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800">
-            <AdsterraDirectLink />
-          </div>
+          {/* NOTE: AdsterraDirectLink was removed from inside the loading state.
+               Showing a clickable ad banner while the user is waiting for results
+               and likely to tap impatiently is a major source of unintentional clicks.
+               The DirectLink appears further down the page at a safe distance. */}
         </div>
       )}
 
@@ -435,8 +442,10 @@ export default function SearchSection({ onSelectStudent, customStudents = [] }) 
             يقدم <strong className="text-emerald-600 dark:text-emerald-400">الرابط الرسمي</strong> عبر موقعنا تجربة استعلام فريدة تعتمد على سيرفرات فائقة السرعة تتحمل الضغط الجماهيري الهائل لحظة الإعلان الرسمي من قبل <strong className="text-slate-900 dark:text-white font-bold">وزارة التربية والتعليم والتعليم الفني</strong>. كما يوفر الموقع حاسبة التنسيق الذكية التي تتوقع الكليات والمعاهد المتاحة لمجموعك بناءً على ضوابط ومؤشرات التنسيق المعتمدة لهذا العام.
           </p>
 
-          <AdsterraDirectLink />
-          <AdsterraNativeContainer />
+          {/* DirectLink and NativeContainer placed once at safe location above. */}
+          <p className="text-xs text-slate-400 dark:text-slate-500 text-center pt-2">
+            للإعلان عن خدماتك عبر موقعنا تواصل معنا.
+          </p>
         </section>
       </article>
 

@@ -22,7 +22,7 @@ export default function AdsterraNativeContainer({ className = '' }) {
   </body>
 </html>`;
 
-    containerRef.current.innerHTML = `<iframe srcdoc="${htmlContent.replace(/"/g, '&quot;')}" width="100%" height="150" style="border:none; overflow:hidden;" scrolling="no" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"></iframe>`;
+    containerRef.current.innerHTML = `<iframe srcdoc="${htmlContent.replace(/"/g, '&quot;')}" width="100%" height="150" style="border:none; overflow:hidden;" scrolling="no" sandbox="allow-scripts allow-same-origin"></iframe>`;
   }, [adsEnabled]);
 
   if (!adsEnabled) return null;

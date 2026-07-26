@@ -54,11 +54,9 @@ export default function StudentResultCard({ student, onBack }) {
   return (
     <div class="max-w-3xl mx-auto px-4 py-8">
       
-      {/* Top Banner Ad Placeholders */}
-      <div class="no-print">
-        <AdBanner slotId="top-result-slot" />
-      </div>
-
+      {/* NOTE: Top AdBanner was moved away from here.
+           Placing a banner directly above the 'back' button caused
+           accidental clicks on mobile when users tried to tap the button. */}
       {/* Back Button & Top Actions */}
       <div class="flex flex-wrap items-center justify-between gap-3 mb-6 no-print">
         <button
@@ -235,8 +233,10 @@ export default function StudentResultCard({ student, onBack }) {
         <AdsterraAd adKey="045dd2bb89397d5c004a8b3b111538ce" width={160} height={600} />
       </div>
 
-      {/* Bottom Ad Banner Placeholder */}
-      <div className="no-print">
+      {/* Bottom Ad Banner - safe position at end of page */}
+      <div className="no-print mt-10">
+        {/* Top AdBanner moved here from above the back button for safe spacing */}
+        <AdBanner slotId="top-result-slot" />
         <AdBanner slotId="bottom-result-slot" />
       </div>
 

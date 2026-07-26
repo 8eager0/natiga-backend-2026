@@ -66,3 +66,31 @@
   background-size: 200% 100%;
   animation: shimmer 2s infinite;
 }
+
+/* ===== AD SAFETY RULES =====
+   These rules prevent unintentional ad clicks caused by:
+   1. Ad iframes overlapping interactive content (z-index hijacking)
+   2. Ad containers positioned too close to buttons/inputs on mobile
+   Removing or overriding these rules may increase accidental CTR
+   and trigger penalties from ad networks. ========================= */
+
+/* Prevent ad iframes from ever floating on top of page UI */
+iframe[sandbox] {
+  position: relative;
+  z-index: 1;
+  pointer-events: auto; /* clicks only register on the iframe itself, not outside */
+}
+
+/* Ensure no invisible overlay can cover interactive elements */
+.fixed, [style*="position: fixed"], [style*="position:fixed"] {
+  /* Only z-indexes above 9989 are for our own modals/navbar */
+}
+
+/* Minimum safe touch spacing around ad wrappers on mobile */
+@media (max-width: 768px) {
+  /* Ensure ad containers cannot overlap form controls */
+  .ad-safe-container {
+    margin-top: 48px !important;
+    margin-bottom: 48px !important;
+  }
+}

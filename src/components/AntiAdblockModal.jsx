@@ -14,9 +14,9 @@ export default function AntiAdblockModal() {
     const detectAdBlocker = async () => {
       let isBlocked = false;
 
-      // Test 1: Try to fetch official Google AdSense script URL
+      // Test 1: Try to fetch official Adsterra script URL
       try {
-        const testUrl = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js';
+        const testUrl = 'https://www.highperformanceformat.com/73b413bfa62a149527b4f12554f5b827/invoke.js';
         const res = await fetch(testUrl, { method: 'HEAD', mode: 'no-cors' });
       } catch (err) {
         // Network error usually indicates AdBlock extension blocked the domain
@@ -26,7 +26,7 @@ export default function AntiAdblockModal() {
       // Test 2: Create a decoy element with ad-specific class names
       if (!isBlocked) {
         const decoy = document.createElement('div');
-        decoy.className = 'adsbygoogle ad-zone ad-space google-ad banner-ad textads';
+        decoy.className = 'ad-zone ad-space banner-ad textads';
         decoy.style.position = 'absolute';
         decoy.style.top = '-9999px';
         decoy.style.left = '-9999px';

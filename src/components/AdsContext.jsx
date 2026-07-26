@@ -26,7 +26,9 @@ export const AdsProvider = ({ children }) => {
     };
 
     checkSettings();
-    const interval = setInterval(checkSettings, 2000);
+    // Poll every 5 minutes instead of 2 seconds.
+    // 2s polling = 1800 requests/hour/user, which is excessive and wasteful.
+    const interval = setInterval(checkSettings, 5 * 60 * 1000);
 
     const handleCustomToggle = () => {
       if (typeof window.ADS_ENABLED === 'boolean') {

@@ -1,0 +1,2 @@
+# ads.txt - Not required (Site exclusively uses Adsterra direct display units)
+
