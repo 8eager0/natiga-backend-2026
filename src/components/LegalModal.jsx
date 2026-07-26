@@ -18,7 +18,7 @@ export default function LegalModal({ isOpen, onClose, initialTab = 'privacy' }) 
             </div>
             <div>
               <h3 className="text-lg font-black text-slate-900 dark:text-white">السياسات والمعلومات القانونية</h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400">موقع نتيجة الثانوية العامة 2026 الرسمي - natiga2026.com</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">موقع نتيجة الثانوية العامة 2026 المستقل - natiga2026.com</p>
             </div>
           </div>
 
@@ -122,12 +122,19 @@ export default function LegalModal({ isOpen, onClose, initialTab = 'privacy' }) 
                 </p>
               </div>
 
-              <h5 className="font-bold text-slate-900 dark:text-white pt-2">شروط الاستخدام</h5>
+              <h5 className="font-bold text-slate-900 dark:text-white pt-2">شروط الاستخدام وإخلاء المسؤولية</h5>
               <ul className="list-disc pr-6 space-y-1 text-xs">
                 <li>الخدمة مقدمة بشكل مجاني بالكامل لجميع الطلاب وأولياء الأمور.</li>
-                <li>يتم استدعاء الدرجات من قاعدة البيانات الرسمية المعتمدة لاختبارات الثانوية العامة.</li>
+                <li>يتم استدعاء الدرجات بناءً على قواعد البيانات المعتمدة لنتائج امتحانات الثانوية العامة.</li>
                 <li>توقعات التنسيق هي استرشادية مبنية على مجاميع الأعوام السابقة لتوجيه الطلاب.</li>
               </ul>
+
+              <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700/60 space-y-1">
+                <h5 className="font-extrabold text-xs text-amber-900 dark:text-amber-300">تنبيه وإخلاء مسؤولية قانوني:</h5>
+                <p className="text-xs text-amber-800 dark:text-amber-400 font-semibold leading-relaxed">
+                  موقع natiga2026.com هو بوابة إلكترونية مستقلة تماماً وغير تابعة أو ممثلة لوزارة التربية والتعليم والتعليم الفني المصرية أو أي جهة حكومية. الهدف من الخدمة هو مساعدة الطلاب في الوصول السريع لنتائجهم وتوفير أدوات التنسيق الاسترشادية.
+                </p>
+              </div>
             </div>
           )}
 

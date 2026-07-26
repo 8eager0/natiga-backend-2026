@@ -20,10 +20,10 @@ export default function Navbar({ activeTab, setActiveTab, darkMode, setDarkMode 
         <div class="max-w-7xl mx-auto flex justify-between items-center">
           <div class="flex items-center gap-2">
             <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span class="font-medium">بوابة النتائج الرسمية - جمهورية مصر العربية</span>
+            <span class="font-medium">البوابة المستقلة لنتائج الثانوية العامة 2026</span>
           </div>
           <div class="hidden sm:flex items-center gap-4 text-emerald-100">
-            <span class="flex items-center gap-1"><ShieldCheck class="w-3.5 h-3.5" /> مأمنة بنسبة 100%</span>
+            <span class="flex items-center gap-1"><ShieldCheck class="w-3.5 h-3.5" /> خدمة استعلام سريعة</span>
             <span>|</span>
             <span>العام الدراسي 2025/2026</span>
           </div>
@@ -52,7 +52,7 @@ export default function Navbar({ activeTab, setActiveTab, darkMode, setDarkMode 
                 </span>
               </div>
               <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">
-                وزارة التربية والتعليم والتعليم الفني
+                موقع استعلام نتائج الطلاب المستقل
               </p>
             </div>
           </div>
