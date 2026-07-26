@@ -32,6 +32,7 @@ if (cluster.isPrimary && process.env.NODE_ENV === 'production') {
 } else {
   // كود الخادم المتنفذ داخل كل عملية عاملة (Worker Process)
   const app = express();
+  app.set('trust proxy', 1); // الثقة في Proxy منصة Render لقراءة عناوين IP الحقيقية
   app.use(cors());
   app.use(express.json());
 

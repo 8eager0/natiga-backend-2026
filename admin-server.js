@@ -31,7 +31,6 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import rateLimit from 'express-rate-limit';
 import multer from 'multer';
-import { createClient } from 'redis';
 import { DatabaseSync } from 'node:sqlite';
 import pkg from 'pg';
 const { Pool } = pkg;
@@ -41,6 +40,7 @@ import NodeCache from 'node-cache';
 const resultCache = new NodeCache({ stdTTL: 900, checkperiod: 120 });
 
 const app = express();
+app.set('trust proxy', 1); // الثقة في Proxy منصة Render لقراءة عناوين IP الحقيقية
 app.use(cors({
   origin: '*',
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
@@ -129,11 +129,8 @@ const adminLoginLimiter = rateLimit({
 app.use('/admin', ipWhitelistMiddleware);
 
 // ============================================================
-// 6. إعدادات Redis
+// 6. إعدادات التخزين المؤقت بالذاكرة (Node-Cache Active)
 // ============================================================
-const redisClient = createClient({ url: process.env.REDIS_URL || 'redis://localhost:6379' });
-redisClient.on('error', (err) => console.warn('⚠️ Redis not available:', err.message));
-redisClient.connect().then(() => console.log('✅ Redis Connected')).catch(() => {});
 
 // ============================================================
 // 7. إعدادات Multer لرفع ملف الاكسل
@@ -483,12 +480,10 @@ app.post('/admin/data/upload-excel', authMiddleware, upload.single('excelFile'),
     // حفظ على القرص
     fs.writeFileSync(dataPath, JSON.stringify(newStudents, null, 0));
 
-    // مسح Redis Cache فوراً بعد رفع بيانات جديدة
+    // مسح Node-Cache فوراً بعد رفع بيانات جديدة
     try {
-      if (redisClient.isOpen) {
-        await redisClient.flushAll();
-        console.log('✅ Redis cache flushed after data upload');
-      }
+      resultCache.flushAll();
+      console.log('✅ Node-Cache flushed after data upload');
     } catch (e) {}
 
     console.log(`✅ Bulk import complete: ${newStudents.length} students loaded`);
@@ -542,10 +537,8 @@ app.post('/admin/data/upload-finish', authMiddleware, async (req, res) => {
     } catch(e) {}
 
     try {
-      if (redisClient.isOpen) {
-        await redisClient.flushAll();
-        console.log('✅ Redis cache flushed after chunked upload');
-      }
+      resultCache.flushAll();
+      console.log('✅ Node-Cache flushed after chunked upload');
     } catch (e) {}
 
     if (global.gc) {
@@ -566,19 +559,15 @@ app.post('/admin/data/upload-finish', authMiddleware, async (req, res) => {
 });
 
 // ----------------------------------------------------------
-// [C] مسح ذاكرة Redis بالكامل (FlushAll)
+// [C] مسح ذاكرة التخزين المؤقت بالكامل (FlushAll Node-Cache)
 // ----------------------------------------------------------
 app.post('/admin/cache/flush', authMiddleware, async (req, res) => {
   try {
-    if (redisClient.isOpen) {
-      await redisClient.flushAll();
-      console.log(`🗑️ Admin ${req.adminUser.username} flushed Redis cache at ${new Date().toISOString()}`);
-      return res.json({ success: true, message: 'تم مسح ذاكرة Redis التخزين المؤقت بالكامل.' });
-    } else {
-      return res.json({ success: true, message: 'Redis غير متصل. تم تخطي العملية.' });
-    }
+    resultCache.flushAll();
+    console.log(`🗑️ Admin ${req.adminUser.username} flushed Node-Cache at ${new Date().toISOString()}`);
+    return res.json({ success: true, message: 'تم مسح ذاكرة التخزين المؤقت (Node-Cache) بالكامل.' });
   } catch (err) {
-    return res.status(500).json({ error: `خطأ أثناء مسح Redis: ${err.message}` });
+    return res.status(500).json({ error: `خطأ أثناء مسح الكاش: ${err.message}` });
   }
 });
 
@@ -972,41 +961,7 @@ app.get('/admin/monitor', authMiddleware, async (req, res) => {
   const uptimeHours = Math.floor((uptimeSeconds % 86400) / 3600);
   const uptimeMinutes = Math.floor((uptimeSeconds % 3600) / 60);
 
-  let redisInfo = 'غير متصل';
-  try {
-    if (redisClient.isOpen) {
-      const info = await redisClient.info('memory');
-      const match = info.match(/used_memory_human:(\S+)/);
-      redisInfo = match ? match[1] : 'متصل';
-    }
-  } catch (e) {}
-
-  return res.json({
-    cpu: {
-      model: os.cpus()[0]?.model || 'Unknown',
-      cores: os.cpus().length,
-      usagePercent: parseFloat(cpuUsage),
-      architecture: os.arch()
-    },
-    memory: {
-      total: `${(totalMem / 1024 / 1024 / 1024).toFixed(2)} GB`,
-      used: `${(usedMem / 1024 / 1024 / 1024).toFixed(2)} GB`,
-      free: `${(freeMem / 1024 / 1024 / 1024).toFixed(2)} GB`,
-      usagePercent: parseFloat(memUsagePercent)
-    },
-    system: {
-      platform: os.platform(),
-      hostname: os.hostname(),
-      uptime: `${uptimeDays} يوم، ${uptimeHours} ساعة، ${uptimeMinutes} دقيقة`,
-      nodeVersion: process.version,
-      pid: process.pid
-    },
-    database: {
-      studentsLoaded: studentsArray.length,
-      leadsCount: leadsDB.length,
-      dataFileExists: fs.existsSync(dataPath)
-    },
-    redis: { status: redisClient.isOpen ? 'متصل' : 'غير متصل', memory: redisInfo },
+    redis: { status: 'Node-Cache مفعل', memory: 'RAM' },
     timestamp: new Date().toISOString()
   });
 });
@@ -1077,15 +1032,11 @@ app.get('/api/search', searchLimiter, async (req, res) => {
   if (!normQ && minScore === null && maxScore === null) return res.json([]);
 
   const cacheKey = `result:${searchType}:${normQ}:${minScore}:${maxScore}`;
-  try {
-    if (redisClient.isOpen) {
-      const cached = await redisClient.get(cacheKey);
-      if (cached) {
-        res.setHeader('X-Cache', 'HIT');
-        return res.json(JSON.parse(cached));
-      }
-    }
-  } catch (e) {}
+  const cached = resultCache.get(cacheKey);
+  if (cached) {
+    res.setHeader('X-Cache', 'HIT');
+    return res.json(cached);
+  }
 
   let results = [];
   if (sqliteDb) {
@@ -1141,11 +1092,9 @@ app.get('/api/search', searchLimiter, async (req, res) => {
     }
   }
 
-  try {
-    if (redisClient.isOpen && results.length > 0) {
-      await redisClient.set(cacheKey, JSON.stringify(results), { EX: 86400 });
-    }
-  } catch (e) {}
+  if (results.length > 0) {
+    resultCache.set(cacheKey, results);
+  }
 
   res.setHeader('X-Cache', 'MISS');
   return res.json(results);
