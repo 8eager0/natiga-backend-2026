@@ -31,7 +31,7 @@ export default function AdsterraAd({ adKey, width, height, format = 'iframe', cl
   </body>
 </html>`;
 
-    containerRef.current.innerHTML = `<iframe srcdoc="${htmlContent.replace(/"/g, '&quot;')}" width="${width}" height="${height}" style="border:none; overflow:hidden;" scrolling="no" sandbox="allow-scripts allow-forms"></iframe>`;
+    containerRef.current.innerHTML = `<iframe srcdoc="${htmlContent.replace(/"/g, '&quot;')}" width="${width}" height="${height}" style="border:none; overflow:hidden;" scrolling="no" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"></iframe>`;
   }, [adKey, width, height, format, adsEnabled]);
 
   if (!adsEnabled) return null;

@@ -7,23 +7,7 @@
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     
-    <!-- Anti Auto-Redirect & Mobile Popunder Guard -->
-    <script>
-      (function() {
-        var origOpen = window.open;
-        window.open = function(url, target, features) {
-          if (typeof url === 'string' && (
-            url.indexOf('effectivecpmnetwork') !== -1 ||
-            url.indexOf('highperformanceformat') !== -1 ||
-            url.indexOf('popunder') !== -1
-          )) {
-            console.warn('[AdShield] Blocked automated popunder redirect to:', url);
-            return null;
-          }
-          return origOpen.apply(this, arguments);
-        };
-      })();
-    </script>
+
     <!-- Google AdSense Official Script -->
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8012936811946791" crossorigin="anonymous"></script>
 
