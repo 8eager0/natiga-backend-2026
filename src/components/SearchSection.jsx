@@ -323,11 +323,6 @@ export default function SearchSection({ onSelectStudent, customStudents = [] }) 
                 <h3 class="text-lg font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
                   <CheckCircle class="w-5 h-5 text-emerald-600" />
                   <span>نتائج البحث ({results.length})</span>
-                  {isFilterActive && (
-                    <span className="text-xs bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 font-bold px-3 py-1 rounded-full border border-emerald-300 dark:border-emerald-800">
-                      المجموع: {minScore || 0} إلى {maxScore || 320}
-                    </span>
-                  )}
                 </h3>
                 <span class="text-xs text-slate-500 dark:text-slate-400">اختر الطالب لعرض بطاقة النتيجة</span>
               </div>
