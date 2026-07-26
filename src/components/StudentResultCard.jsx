@@ -228,10 +228,11 @@ export default function StudentResultCard({ student, onBack }) {
         <AdsterraAd adKey="1f517a72be5215de5a96e2a8439c8139" width={300} height={250} />
       </div>
 
-      {/* Adsterra Result Page Ad Units */}
-      <div className="no-print my-6 flex flex-col sm:flex-row items-center justify-center gap-6">
+      {/* Adsterra Result Page Ad Units (468x60 Banner + 160x300 Skyscraper + 160x600 Wide Skyscraper) */}
+      <div className="no-print my-6 flex flex-col md:flex-row items-center justify-center gap-6">
         <AdsterraAd adKey="a019205f76a4a0315da7becc52188c93" width={468} height={60} />
         <AdsterraAd adKey="59892d73e22cd4983b8fcb11d42f7836" width={160} height={300} />
+        <AdsterraAd adKey="045dd2bb89397d5c004a8b3b111538ce" width={160} height={600} />
       </div>
 
       {/* Bottom Ad Banner Placeholder */}

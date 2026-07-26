@@ -255,9 +255,14 @@ export default function SearchSection({ onSelectStudent, customStudents = [] }) 
         </form>
       </div>
 
-      {/* Adsterra Direct Link & Native Container Ad Units */}
+      {/* Adsterra Direct Link & Native Container & Wide Skyscraper Ad Units */}
       <AdsterraDirectLink />
       <AdsterraNativeContainer />
+
+      <div className="my-6 flex flex-col md:flex-row items-center justify-center gap-6">
+        <AdsterraAd adKey="a019205f76a4a0315da7becc52188c93" width={468} height={60} />
+        <AdsterraAd adKey="045dd2bb89397d5c004a8b3b111538ce" width={160} height={600} />
+      </div>
 
       {/* High-Engagement 3-Stage Result Preparation Loader */}
       {isSearching && (
