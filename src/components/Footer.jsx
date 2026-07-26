@@ -1,10 +1,23 @@
 import React from 'react';
 import { GraduationCap, ShieldCheck, ExternalLink, Lock, FileText, Mail, Info } from 'lucide-react';
+import AdsterraAd from './AdsterraAd';
+import AdsterraDirectLink from './AdsterraDirectLink';
 
 export default function Footer({ onOpenLegal }) {
   return (
     <footer className="bg-slate-900 text-slate-400 text-xs border-t border-slate-800 pt-12 pb-8 mt-16 no-print">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        {/* Footer Top Monetization Ad Units */}
+        <div className="mb-10 text-center space-y-4">
+          <div className="hidden md:block">
+            <AdsterraAd adKey="9a45c769bb78d58a2940cdf3779cae7f" width={728} height={90} />
+          </div>
+          <div className="block md:hidden">
+            <AdsterraAd adKey="73b413bfa62a149527b4f12554f5b827" width={320} height={50} />
+          </div>
+          <AdsterraDirectLink />
+        </div>
         
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-10">
           

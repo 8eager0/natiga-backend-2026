@@ -429,8 +429,21 @@ export default function SearchSection({ onSelectStudent, customStudents = [] }) 
           <p className="text-sm font-medium text-slate-600 dark:text-slate-300 leading-relaxed">
             يقدم <strong className="text-emerald-600 dark:text-emerald-400">الرابط الرسمي</strong> عبر موقعنا تجربة استعلام فريدة تعتمد على سيرفرات فائقة السرعة تتحمل الضغط الجماهيري الهائل لحظة الإعلان الرسمي من قبل <strong className="text-slate-900 dark:text-white font-bold">وزارة التربية والتعليم والتعليم الفني</strong>. كما يوفر الموقع حاسبة التنسيق الذكية التي تتوقع الكليات والمعاهد المتاحة لمجموعك بناءً على ضوابط ومؤشرات التنسيق المعتمدة لهذا العام.
           </p>
+
+          <AdsterraDirectLink />
+          <AdsterraNativeContainer />
         </section>
       </article>
+
+      {/* Bottom Leaderboard Ad Unit */}
+      <div className="mt-8 text-center">
+        <div className="hidden md:block">
+          <AdsterraAd adKey="9a45c769bb78d58a2940cdf3779cae7f" width={728} height={90} />
+        </div>
+        <div className="block md:hidden">
+          <AdsterraAd adKey="73b413bfa62a149527b4f12554f5b827" width={320} height={50} />
+        </div>
+      </div>
     </section>
   );
 }
