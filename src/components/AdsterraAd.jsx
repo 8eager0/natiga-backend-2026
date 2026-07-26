@@ -36,7 +36,8 @@ export default function AdsterraAd({ adKey, width, height, format = 'iframe', cl
     if (!adsEnabled || !inView) return;
     if (!adKey || !containerRef.current) return;
 
-    const htmlContent = `<!DOCTYPE html>
+    const renderAd = () => {
+      const htmlContent = `<!DOCTYPE html>
 <html>
   <head>
     <meta charset="utf-8">
@@ -58,7 +59,18 @@ export default function AdsterraAd({ adKey, width, height, format = 'iframe', cl
   </body>
 </html>`;
 
-    containerRef.current.innerHTML = `<iframe key="${refreshKey}" srcdoc="${htmlContent.replace(/"/g, '&quot;')}" width="${width}" height="${height}" style="border:none; overflow:hidden;" scrolling="no" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"></iframe>`;
+      if (containerRef.current) {
+        containerRef.current.innerHTML = `<iframe key="${refreshKey}" srcdoc="${htmlContent.replace(/"/g, '&quot;')}" width="${width}" height="${height}" style="border:none; overflow:hidden;" scrolling="no" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"></iframe>`;
+      }
+    };
+
+    if ('requestIdleCallback' in window) {
+      const idleId = window.requestIdleCallback(renderAd, { timeout: 2000 });
+      return () => window.cancelIdleCallback(idleId);
+    } else {
+      const timeoutId = setTimeout(renderAd, 150);
+      return () => clearTimeout(timeoutId);
+    }
   }, [adKey, width, height, format, adsEnabled, inView, refreshKey]);
 
   if (!adsEnabled) return null;
