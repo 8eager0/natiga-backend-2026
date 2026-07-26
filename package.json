@@ -13,6 +13,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "admin": "node --max-old-space-size=460 --expose-gc admin-server.js",
+    "import-db": "node scripts/import-data.js",
+    "setup-db": "node scripts/setup-db.js",
     "server": "node --max-old-space-size=460 --expose-gc server.js"
   },
   "dependencies": {
