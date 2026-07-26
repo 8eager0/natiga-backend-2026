@@ -6,6 +6,7 @@ import AdBanner from './AdBanner';
 import LeadGenForm from './LeadGenForm';
 import AdsterraAd from './AdsterraAd';
 import CollegePredictor from './CollegePredictor';
+import ScoreTargetedAd from './ScoreTargetedAd';
 
 export default function StudentResultCard({ student, onBack }) {
 
@@ -210,6 +211,11 @@ export default function StudentResultCard({ student, onBack }) {
             <span>شاركت النتيجة على الواتساب</span>
           </button>
         </div>
+      </div>
+
+      {/* Personalized Score-Targeted Ad Banner */}
+      <div className="no-print">
+        <ScoreTargetedAd percentage={percentage} branch={student.branch || 'علمي علوم'} />
       </div>
 
       {/* College Predictor Calculator Component */}

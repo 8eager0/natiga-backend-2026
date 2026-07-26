@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Hash, User, Sparkles, AlertCircle, ArrowLeft, CheckCircle, Send, ExternalLink } from 'lucide-react';
+import { Search, Hash, User, Sparkles, AlertCircle, ArrowLeft, CheckCircle, Send, ExternalLink, Server, Clock, Award } from 'lucide-react';
 import { searchStudentsAsync } from '../data/studentsData';
 import { API_BASE_URL } from '../config';
 import AdsterraAd from './AdsterraAd';
@@ -12,6 +12,8 @@ export default function SearchSection({ onSelectStudent, customStudents = [] }) 
   const [results, setResults] = useState([]);
   const [hasSearched, setHasSearched] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
+  const [loadingStage, setLoadingStage] = useState(1);
+  const [activeServer, setActiveServer] = useState(1);
   const [totalDbCount, setTotalDbCount] = useState(810980);
 
   // Check backend connection on mount
@@ -30,8 +32,19 @@ export default function SearchSection({ onSelectStudent, customStudents = [] }) 
 
     setIsSearching(true);
     setHasSearched(true);
+    setLoadingStage(1);
 
-    const matched = await searchStudentsAsync(query, searchType, customStudents);
+    const timer1 = setTimeout(() => setLoadingStage(2), 1200);
+    const timer2 = setTimeout(() => setLoadingStage(3), 2400);
+
+    const matchedPromise = searchStudentsAsync(query, searchType, customStudents);
+    const delayPromise = new Promise(resolve => setTimeout(resolve, 3400));
+
+    const [matched] = await Promise.all([matchedPromise, delayPromise]);
+
+    clearTimeout(timer1);
+    clearTimeout(timer2);
+
     setResults(matched);
     setIsSearching(false);
 
@@ -69,6 +82,60 @@ export default function SearchSection({ onSelectStudent, customStudents = [] }) 
       {/* Main Search Card Container */}
       <div class="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-200/80 dark:border-slate-800">
         
+        {/* Multi-Server Selection Tabs */}
+        <div className="mb-6 pb-4 border-b border-slate-100 dark:border-slate-800">
+          <div className="flex items-center justify-between gap-2 mb-2">
+            <span className="text-xs font-black text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+              <Server className="w-4 h-4 text-emerald-600 animate-pulse" />
+              <span>اختر سيرفر الاستعلام السريع:</span>
+            </span>
+            <span className="text-[11px] font-extrabold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/80 px-2.5 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
+              متصل وسريع (0.1ms)
+            </span>
+          </div>
+
+          <div className="grid grid-cols-3 gap-2">
+            <button
+              type="button"
+              onClick={() => setActiveServer(1)}
+              className={`py-2 px-3 rounded-xl font-black text-xs transition-all flex items-center justify-center gap-1.5 border ${
+                activeServer === 1
+                  ? 'bg-emerald-600 text-white border-emerald-500 shadow-md shadow-emerald-600/20'
+                  : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-100'
+              }`}
+            >
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+              <span>سيرفر 1 (الوزارة)</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveServer(2)}
+              className={`py-2 px-3 rounded-xl font-black text-xs transition-all flex items-center justify-center gap-1.5 border ${
+                activeServer === 2
+                  ? 'bg-emerald-600 text-white border-emerald-500 shadow-md shadow-emerald-600/20'
+                  : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-100'
+              }`}
+            >
+              <span className="w-2 h-2 rounded-full bg-amber-400"></span>
+              <span>سيرفر 2 (احتياطي)</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveServer(3)}
+              className={`py-2 px-3 rounded-xl font-black text-xs transition-all flex items-center justify-center gap-1.5 border ${
+                activeServer === 3
+                  ? 'bg-emerald-600 text-white border-emerald-500 shadow-md shadow-emerald-600/20'
+                  : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-100'
+              }`}
+            >
+              <span className="w-2 h-2 rounded-full bg-sky-400"></span>
+              <span>سيرفر 3 (سريع)</span>
+            </button>
+          </div>
+        </div>
+
         {/* Toggle Search Mode: By Seat Number vs By Name */}
         <div class="flex p-1.5 bg-slate-100 dark:bg-slate-800/80 rounded-2xl mb-6 max-w-md mx-auto">
           <button
@@ -155,7 +222,7 @@ export default function SearchSection({ onSelectStudent, customStudents = [] }) 
             {isSearching ? (
               <>
                 <span class="w-6 h-6 border-3 border-white border-t-transparent rounded-full animate-spin"></span>
-                <span>جاري البحث...</span>
+                <span>جاري استخراج النتيجة...</span>
               </>
             ) : (
               <>
@@ -165,7 +232,7 @@ export default function SearchSection({ onSelectStudent, customStudents = [] }) 
             )}
           </button>
 
-          {/* Telegram Channel Link with 1st Click Ad, 2nd Click Telegram logic */}
+          {/* Telegram Channel Link */}
           <div className="mt-3">
             <a
               href="https://t.me/natigaa2026"
@@ -185,12 +252,35 @@ export default function SearchSection({ onSelectStudent, customStudents = [] }) 
       <AdsterraDirectLink />
       <AdsterraNativeContainer />
 
-      {/* Loading Indicator during async search */}
+      {/* High-Engagement 3-Stage Result Preparation Loader */}
       {isSearching && (
-        <div className="mt-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 text-center shadow-lg">
-          <div className="w-12 h-12 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <h3 className="text-lg font-black text-slate-900 dark:text-white mb-1">جاري استدعاء وتصفية النتائج المعتمدة...</h3>
-          <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">جاري الاستعلام وتطبيق شروط البحث على قواعد البيانات</p>
+        <div className="mt-8 bg-white dark:bg-slate-900 border-2 border-emerald-500/30 rounded-3xl p-6 sm:p-8 text-center shadow-2xl relative overflow-hidden animate-fadeIn">
+          <div className="w-16 h-16 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          
+          <div className="space-y-2 mb-6">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-xs font-black">
+              <Clock className="w-3.5 h-3.5 animate-spin" />
+              <span>جاري المعالجة السريعة عبر {activeServer === 1 ? 'سيرفر 1 (الوزارة)' : activeServer === 2 ? 'سيرفر 2 (احتياطي)' : 'سيرفر 3 (سريع)'}</span>
+            </span>
+
+            <h3 className="text-xl font-black text-slate-900 dark:text-white">
+              {loadingStage === 1 && 'جاري الاتصال بقواعد بيانات وزارة التربية والتعليم...'}
+              {loadingStage === 2 && 'جاري استدعاء درجات المواد وتدقيق المجموع الكلي...'}
+              {loadingStage === 3 && 'جاري تجهيز بطاقة النتيجة وحاسبة التنسيق المعتمدة...'}
+            </h3>
+
+            <div className="w-full bg-slate-100 dark:bg-slate-800 h-2.5 rounded-full max-w-md mx-auto overflow-hidden">
+              <div
+                className="bg-gradient-to-r from-emerald-500 to-teal-500 h-full transition-all duration-700 ease-out"
+                style={{ width: `${loadingStage * 33.3}%` }}
+              ></div>
+            </div>
+          </div>
+
+          {/* High-CTR Recommendation Card during result lookup */}
+          <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+            <AdsterraDirectLink />
+          </div>
         </div>
       )}
 

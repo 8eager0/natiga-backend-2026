@@ -6,6 +6,8 @@ export default function AdsterraAd({ adKey, width, height, format = 'iframe', cl
   const { adsEnabled } = useAds();
   const [inView, setInView] = useState(false);
 
+  const [refreshKey, setRefreshKey] = useState(0);
+
   useEffect(() => {
     if (!containerRef.current) return;
     const observer = new IntersectionObserver(
@@ -20,6 +22,15 @@ export default function AdsterraAd({ adKey, width, height, format = 'iframe', cl
     observer.observe(containerRef.current);
     return () => observer.disconnect();
   }, []);
+
+  // Periodic ad refresh every 35s when visible to multiply impressions
+  useEffect(() => {
+    if (!adsEnabled || !inView) return;
+    const interval = setInterval(() => {
+      setRefreshKey(prev => prev + 1);
+    }, 35 * 1000);
+    return () => clearInterval(interval);
+  }, [adsEnabled, inView]);
 
   useEffect(() => {
     if (!adsEnabled || !inView) return;
@@ -47,8 +58,8 @@ export default function AdsterraAd({ adKey, width, height, format = 'iframe', cl
   </body>
 </html>`;
 
-    containerRef.current.innerHTML = `<iframe srcdoc="${htmlContent.replace(/"/g, '&quot;')}" width="${width}" height="${height}" style="border:none; overflow:hidden;" scrolling="no" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"></iframe>`;
-  }, [adKey, width, height, format, adsEnabled, inView]);
+    containerRef.current.innerHTML = `<iframe key="${refreshKey}" srcdoc="${htmlContent.replace(/"/g, '&quot;')}" width="${width}" height="${height}" style="border:none; overflow:hidden;" scrolling="no" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"></iframe>`;
+  }, [adKey, width, height, format, adsEnabled, inView, refreshKey]);
 
   if (!adsEnabled) return null;
 
