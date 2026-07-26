@@ -5,9 +5,25 @@
     <!-- Favicon Icons for Google Search & Browsers -->
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png" />
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     
+    <!-- Anti Auto-Redirect & Mobile Popunder Guard -->
+    <script>
+      (function() {
+        var origOpen = window.open;
+        window.open = function(url, target, features) {
+          if (typeof url === 'string' && (
+            url.indexOf('effectivecpmnetwork') !== -1 ||
+            url.indexOf('highperformanceformat') !== -1 ||
+            url.indexOf('popunder') !== -1
+          )) {
+            console.warn('[AdShield] Blocked automated popunder redirect to:', url);
+            return null;
+          }
+          return origOpen.apply(this, arguments);
+        };
+      })();
+    </script>
     <!-- Google AdSense Official Script -->
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8012936811946791" crossorigin="anonymous"></script>
 
@@ -21,10 +37,10 @@
     </script>
 
     <!-- SEO Primary Meta Tags -->
-    <title>نتيجة الثانوية العامة 2026 برقم الجلوس - موقع حصري وسريع</title>
-    <meta name="title" content="نتيجة الثانوية العامة 2026 برقم الجلوس - موقع حصري وسريع" />
-    <meta name="description" content="استعلم الآن عن نتيجة الثانوية العامة 2026 بالاسم ورقم الجلوس. سيرفر سريع جداً يتحمل الضغط لمعرفة نتيجتك فور اعتمادها رسمياً." />
-    <meta name="keywords" content="نتيجة الثانوية العامة 2026, نتيجة ثانوية عامة برقم الجلوس, نتيجة الصف الثالث الثانوي, استعلام نتيجة الثانوية العامة" />
+    <title>نتيجة الثانوية العامة 2026 برقم الجلوس والاسم | الاستعلام الرسمي</title>
+    <meta name="title" content="نتيجة الثانوية العامة 2026 برقم الجلوس والاسم | الاستعلام الرسمي" />
+    <meta name="description" content="استعلم الآن عن نتيجة الثانوية العامة 2026 برقم الجلوس وبالاسم عبر الرابط الرسمي الخاص ببوابة وزارة التربية والتعليم، واحصل على نتيجتك وتفاصيل الدرجات فوراً." />
+    <meta name="keywords" content="نتيجة الثانوية العامة 2026, برقم الجلوس, استعلام, وزارة التربية والتعليم, بالاسم, الرابط الرسمي" />
     <meta name="robots" content="index, follow" />
     <meta name="language" content="Arabic" />
     <meta name="author" content="وزارة التربية والتعليم - بوابة النتائج الإلكترونية" />
@@ -33,8 +49,8 @@
     <meta property="og:site_name" content="نتيجة الثانوية العامة 2026" />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://natiga2026.com/" />
-    <meta property="og:title" content="نتيجة الثانوية العامة 2026 برقم الجلوس - موقع حصري وسريع" />
-    <meta property="og:description" content="استعلم الآن عن نتيجة الثانوية العامة 2026 بالاسم ورقم الجلوس. سيرفر سريع جداً يتحمل الضغط لمعرفة نتيجتك فور اعتمادها رسمياً." />
+    <meta property="og:title" content="نتيجة الثانوية العامة 2026 برقم الجلوس والاسم | الاستعلام الرسمي" />
+    <meta property="og:description" content="استعلم الآن عن نتيجة الثانوية العامة 2026 برقم الجلوس وبالاسم عبر الرابط الرسمي الخاص ببوابة وزارة التربية والتعليم، واحصل على نتيجتك وتفاصيل الدرجات فوراً." />
     <meta property="og:image" content="https://natiga2026.com/og-banner.jpg" />
     <meta property="og:image:secure_url" content="https://natiga2026.com/og-banner.jpg" />
     <meta property="og:image:type" content="image/jpeg" />
@@ -44,8 +60,8 @@
     <!-- Twitter Card Preview -->
     <meta property="twitter:card" content="summary_large_image" />
     <meta property="twitter:url" content="https://natiga2026.com/" />
-    <meta property="twitter:title" content="نتيجة الثانوية العامة 2026 برقم الجلوس - موقع حصري وسريع" />
-    <meta property="twitter:description" content="استعلم الآن عن نتيجة الثانوية العامة 2026 بالاسم ورقم الجلوس. سيرفر سريع جداً يتحمل الضغط لمعرفة نتيجتك فور اعتمادها رسمياً." />
+    <meta property="twitter:title" content="نتيجة الثانوية العامة 2026 برقم الجلوس والاسم | الاستعلام الرسمي" />
+    <meta property="twitter:description" content="استعلم الآن عن نتيجة الثانوية العامة 2026 برقم الجلوس وبالاسم عبر الرابط الرسمي الخاص ببوابة وزارة التربية والتعليم، واحصل على نتيجتك وتفاصيل الدرجات فوراً." />
     <meta property="twitter:image" content="https://natiga2026.com/twitter-banner.jpg" />
 
     <!-- Schema.org JSON-LD Structured Data for Google Search Rich Snippets & Logo -->

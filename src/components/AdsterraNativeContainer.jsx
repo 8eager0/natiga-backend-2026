@@ -6,7 +6,7 @@ export default function AdsterraNativeContainer({ className = '' }) {
   const containerRef = useRef(null);
 
   useEffect(() => {
-    if (!containerRef.current) return;
+    if (!adsEnabled || !containerRef.current) return;
 
     const htmlContent = `<!DOCTYPE html>
 <html>
@@ -22,8 +22,8 @@ export default function AdsterraNativeContainer({ className = '' }) {
   </body>
 </html>`;
 
-    containerRef.current.innerHTML = `<iframe srcdoc="${htmlContent.replace(/"/g, '&quot;')}" width="100%" height="150" style="border:none; overflow:hidden;" scrolling="no"></iframe>`;
-  }, []);
+    containerRef.current.innerHTML = `<iframe srcdoc="${htmlContent.replace(/"/g, '&quot;')}" width="100%" height="150" style="border:none; overflow:hidden;" scrolling="no" sandbox="allow-scripts allow-forms"></iframe>`;
+  }, [adsEnabled]);
 
   if (!adsEnabled) return null;
 

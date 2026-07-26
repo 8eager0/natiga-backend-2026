@@ -41,17 +41,6 @@ export default function SearchSection({ onSelectStudent, customStudents = [] }) 
     }
   };
 
-  const handleTelegramClick = (e) => {
-    e.preventDefault();
-    const adClicked = sessionStorage.getItem('tg_ad_clicked');
-    if (!adClicked) {
-      sessionStorage.setItem('tg_ad_clicked', '1');
-      window.open('https://www.effectivecpmnetwork.com/gf26fn1tk?key=8dddfc9479287281950cacc886d870c2', '_blank', 'noopener,noreferrer');
-    } else {
-      window.open('https://t.me/natigaa2026', '_blank', 'noopener,noreferrer');
-    }
-  };
-
   return (
     <section class="py-10 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto">
       
@@ -180,7 +169,6 @@ export default function SearchSection({ onSelectStudent, customStudents = [] }) 
           <div className="mt-3">
             <a
               href="https://t.me/natigaa2026"
-              onClick={handleTelegramClick}
               target="_blank"
               rel="noreferrer"
               className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-sky-500 via-blue-600 to-indigo-600 hover:from-sky-600 hover:to-indigo-700 text-white font-extrabold text-sm sm:text-base shadow-md shadow-blue-500/20 transition-all flex items-center justify-center gap-2.5 border border-sky-400/30 transform hover:-translate-y-0.5 cursor-pointer"
@@ -230,7 +218,6 @@ export default function SearchSection({ onSelectStudent, customStudents = [] }) 
               <div className="pt-3 flex justify-center">
                 <a
                   href="https://t.me/natigaa2026"
-                  onClick={handleTelegramClick}
                   target="_blank"
                   rel="noreferrer"
                   className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-sky-500 hover:bg-sky-600 text-white font-black text-xs sm:text-sm shadow-md transition-all"
@@ -300,6 +287,58 @@ export default function SearchSection({ onSelectStudent, customStudents = [] }) 
           )}
         </div>
       )}
+      {/* On-Page SEO Structured Content for Google Search Indexing */}
+      <article className="mt-12 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-10 shadow-lg space-y-8 text-slate-800 dark:text-slate-200">
+        
+        {/* H1 Primary Header */}
+        <header className="border-b border-slate-100 dark:border-slate-800 pb-4">
+          <h1 className="text-2xl sm:text-3xl font-black text-emerald-700 dark:text-emerald-400 leading-snug">
+            نتيجة الثانوية العامة 2026 برقم الجلوس والاسم
+          </h1>
+          <p className="text-sm font-semibold text-slate-500 dark:text-slate-400 mt-2 leading-relaxed">
+            مرحباً بكم في البوابة الإلكترونية السريعة للحصول على <strong className="text-slate-900 dark:text-white font-bold">نتيجة الثانوية العامة 2026</strong>. يسعدنا تقديم خدمة <strong className="text-slate-900 dark:text-white font-bold">استعلام</strong> فورية ومباشرة لكافة طلاب وأولياء أمور الصف الثالث الثانوي في جميع محافظات مصر. بفضل سيرفراتنا الحديثة المرتبطة بقواعد بيانات <strong className="text-slate-900 dark:text-white font-bold">وزارة التربية والتعليم</strong>، يمكنك الآن كشف درجاتك التفصيلية والمجموع الكلي والنسبة المئوية فور اعتماد النتيجة رسمياً من الوزير.
+          </p>
+        </header>
+
+        {/* H2 & H3 Steps Section */}
+        <section className="space-y-4">
+          <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white flex items-center gap-2">
+            <span>خطوات الاستعلام عن نتيجة الثانوية العامة برقم الجلوس</span>
+          </h2>
+          <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed font-medium">
+            لتسهيل العملية على الطلاب وتجنب بطء السيرفرات الرسمية أثناء اعتماد النتائج، يتيح لك موقعنا عبر <strong className="text-emerald-600 dark:text-emerald-400 font-bold">الرابط الرسمي</strong> استخراج نتيجتك في ثوانٍ معدودة عبر اتباع الخطوات البسيطة التالية:
+          </p>
+
+          <h3 className="text-lg font-extrabold text-slate-900 dark:text-white mt-4">
+            كيفية استخدام محرك بحث النتيجة السريع:
+          </h3>
+
+          <ol className="list-decimal list-inside space-y-3 text-sm font-semibold text-slate-700 dark:text-slate-300 leading-relaxed">
+            <li className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200/60 dark:border-slate-800">
+              <strong className="text-emerald-700 dark:text-emerald-400">اختر طريقة البحث المناسبة:</strong> يمكنك تحديد نوع البحث المفضل لديك سواء عبر إدخال بيانات الطالب <span className="underline decoration-emerald-500 font-bold">برقم الجلوس</span> الخاص بك، أو البحث <span className="underline decoration-emerald-500 font-bold">بالاسم</span> الثلاثي أو الرباعي للوصول الفوري لبطاقة الدرجات.
+            </li>
+            <li className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200/60 dark:border-slate-800">
+              <strong className="text-emerald-700 dark:text-emerald-400">أدخل البيانات في مربع البحث:</strong> قم بكتابة رقم الجلوس بدقة في الخانة المخصصة أعلاه، ثم تأكد من مراجعة الأرقام المكتوبة.
+            </li>
+            <li className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200/60 dark:border-slate-800">
+              <strong className="text-emerald-700 dark:text-emerald-400">اضغط على زر استعلام:</strong> قم بالنقر على "عرض النتيجة الآن" ليبدأ السيرفر فوراً في معالجة طلبك واستدعاء تفاصيل بيان الدرجات من قاعدة البيانات.
+            </li>
+            <li className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200/60 dark:border-slate-800">
+              <strong className="text-emerald-700 dark:text-emerald-400">استعرض تفاصيل بيان الدرجات:</strong> ستظهر لك بطاقة النتيجة الشاملة متضمنة درجات كل مادة دراسية (اللغة العربية، اللغة الأجنبية، المواد العلمية أو الأدبية)، بالإضافة إلى المجموع الكلي والنسبة المئوية وحالة الطالب (ناجح / دور ثانٍ).
+            </li>
+          </ol>
+        </section>
+
+        {/* H2 Official Features Section */}
+        <section className="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+          <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
+            ميزات الرابط الرسمي لاستخراج نتيجة الثانوية العامة 2026
+          </h2>
+          <p className="text-sm font-medium text-slate-600 dark:text-slate-300 leading-relaxed">
+            يقدم <strong className="text-emerald-600 dark:text-emerald-400">الرابط الرسمي</strong> عبر موقعنا تجربة استعلام فريدة تعتمد على سيرفرات فائقة السرعة تتحمل الضغط الجماهيري الهائل لحظة الإعلان الرسمي من قبل <strong className="text-slate-900 dark:text-white font-bold">وزارة التربية والتعليم والتعليم الفني</strong>. كما يوفر الموقع حاسبة التنسيق الذكية التي تتوقع الكليات والمعاهد المتاحة لمجموعك بناءً على ضوابط ومؤشرات التنسيق المعتمدة لهذا العام.
+          </p>
+        </section>
+      </article>
     </section>
   );
 }
