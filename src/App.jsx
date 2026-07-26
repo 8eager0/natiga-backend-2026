@@ -7,6 +7,7 @@ import AdminDashboard from './components/AdminDashboard';
 import Footer from './components/Footer';
 import LegalModal from './components/LegalModal';
 import AntiAdblockModal from './components/AntiAdblockModal';
+import StickyAnchorAd from './components/StickyAnchorAd';
 import { AdsProvider } from './components/AdsContext';
 import { API_BASE_URL } from './config';
 
@@ -125,6 +126,7 @@ export default function App() {
         />
 
         <AntiAdblockModal />
+        <StickyAnchorAd />
       </div>
     </AdsProvider>
   );
