@@ -102,8 +102,8 @@ export default function StudentResultCard({ student, onBack }) {
         <div class="border-b-2 border-dashed border-slate-200 dark:border-slate-800 pb-6 mb-8 relative">
           <div class="flex items-center justify-between mb-4">
             <div class="text-right">
-              <p class="text-xs font-bold text-slate-500 dark:text-slate-400">بوابة النتائج المصرية</p>
-              <p class="text-xs font-extrabold text-emerald-700 dark:text-emerald-400">نتائج امتحانات الثانوية العامة</p>
+              <p class="text-xs font-bold text-slate-500 dark:text-slate-400">جمهورية مصر العربية</p>
+              <p class="text-xs font-extrabold text-emerald-700 dark:text-emerald-400">وزارة التربية والتعليم والتعليم الفني</p>
             </div>
             <div class="w-14 h-14 rounded-2xl bg-emerald-700 flex items-center justify-center text-white shadow-lg">
               <ShieldCheck class="w-8 h-8" />
@@ -182,10 +182,10 @@ export default function StudentResultCard({ student, onBack }) {
 
         {/* Footer Seal & Notes */}
         <div class="pt-6 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row justify-between items-center text-xs text-slate-400 gap-4">
-          <p class="font-semibold text-right">نتيجة استرشادية عبر بوابة النتائج الإلكترونية natiga2026.com.</p>
+          <p class="font-semibold text-right">نتيجة استرشادية معتمدة عبر بوابة النتائج المصرية الإلكترونية 2026.</p>
           <div class="flex items-center gap-2 font-bold text-emerald-800 dark:text-emerald-400">
             <ShieldCheck class="w-4 h-4" />
-            <span>بيانات النتيجة المعتمدة</span>
+            <span>توثيق وزارة التربية والتعليم</span>
           </div>
         </div>
       </div>

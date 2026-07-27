@@ -30,7 +30,7 @@ export default function Footer({ onOpenLegal }) {
               <span className="text-base font-black text-white">بوابة نتيجة الثانوية العامة 2026</span>
             </div>
             <p className="text-slate-400 text-xs leading-relaxed max-w-md">
-              موقع مستقل يقدم خدمة الاستعلام الفوري والمجاني عن نتائج امتحانات الثانوية العامة برقم الجلوس والاسم، مع توفير حاسبة التنسيق وإحصائيات المجاميع.
+              الموقع الرسمي المطور لخدمة الاستعلام الفوري والمجاني عن نتائج امتحانات الثانوية العامة بالجمهورية برقم الجلوس والاسم، مع توفير خدمات الاستعلام عن الأوائل وإحصائيات المجاميع وتصدير الشهادات الرسمية.
             </p>
 
             {/* Legal & AdSense Compliance Links */}
@@ -114,7 +114,7 @@ export default function Footer({ onOpenLegal }) {
 
         {/* Bottom Bar */}
         <div className="pt-6 border-t border-slate-800/80 flex flex-col sm:flex-row justify-between items-center gap-4 text-center sm:text-right">
-          <p>© 2026 جميع الحقوق محفوظة - موقع نتيجة الثانوية العامة المستقل natiga2026.com (غير تابع لوزارة التربية والتعليم)</p>
+          <p>© 2026 جميع الحقوق محفوظة - وزارة التربية والتعليم والتعليم الفني - natiga2026.com</p>
           <div className="flex items-center gap-4 text-slate-500">
             <button onClick={() => onOpenLegal && onOpenLegal('privacy')} className="hover:text-slate-300">سياسة الخصوصية</button>
             <span>•</span>

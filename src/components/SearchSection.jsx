@@ -105,7 +105,7 @@ export default function SearchSection({ onSelectStudent, customStudents = [] }) 
               }`}
             >
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-              <span>سيرفر 1 (الرئيسي)</span>
+              <span>سيرفر 1 (الوزارة)</span>
             </button>
 
             <button
@@ -279,11 +279,11 @@ export default function SearchSection({ onSelectStudent, customStudents = [] }) 
           <div className="space-y-2 mb-6">
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-xs font-black">
               <Clock className="w-3.5 h-3.5 animate-spin" />
-              <span>جاري المعالجة السريعة عبر {activeServer === 1 ? 'سيرفر 1 (الرئيسي)' : activeServer === 2 ? 'سيرفر 2 (احتياطي)' : 'سيرفر 3 (سريع)'}</span>
+              <span>جاري المعالجة السريعة عبر {activeServer === 1 ? 'سيرفر 1 (الوزارة)' : activeServer === 2 ? 'سيرفر 2 (احتياطي)' : 'سيرفر 3 (سريع)'}</span>
             </span>
 
             <h3 className="text-xl font-black text-slate-900 dark:text-white">
-              {loadingStage === 1 && 'جاري الاتصال بالسيرفر واستدعاء البيانات...'}
+              {loadingStage === 1 && 'جاري الاتصال بقواعد بيانات وزارة التربية والتعليم...'}
               {loadingStage === 2 && 'جاري استدعاء درجات المواد وتدقيق المجموع الكلي...'}
               {loadingStage === 3 && 'جاري تجهيز بطاقة النتيجة وحاسبة التنسيق المعتمدة...'}
             </h3>
@@ -400,7 +400,7 @@ export default function SearchSection({ onSelectStudent, customStudents = [] }) 
             نتيجة الثانوية العامة 2026 برقم الجلوس والاسم
           </h1>
           <p className="text-sm font-semibold text-slate-500 dark:text-slate-400 mt-2 leading-relaxed">
-            مرحباً بكم في البوابة الإلكترونية السريعة للحصول على <strong className="text-slate-900 dark:text-white font-bold">نتيجة الثانوية العامة 2026</strong>. يسعدنا تقديم خدمة <strong className="text-slate-900 dark:text-white font-bold">استعلام</strong> فورية ومباشرة لكافة طلاب وأولياء أمور الصف الثالث الثانوي في جميع محافظات مصر. بفضل سيرفراتنا الحديثة السريعة، يمكنك الآن كشف درجاتك التفصيلية والمجموع الكلي والنسبة المئوية فور اعتماد النتيجة رسمياً.
+            مرحباً بكم في البوابة الإلكترونية السريعة للحصول على <strong className="text-slate-900 dark:text-white font-bold">نتيجة الثانوية العامة 2026</strong>. يسعدنا تقديم خدمة <strong className="text-slate-900 dark:text-white font-bold">استعلام</strong> فورية ومباشرة لكافة طلاب وأولياء أمور الصف الثالث الثانوي في جميع محافظات مصر. بفضل سيرفراتنا الحديثة المرتبطة بقواعد بيانات <strong className="text-slate-900 dark:text-white font-bold">وزارة التربية والتعليم</strong>، يمكنك الآن كشف درجاتك التفصيلية والمجموع الكلي والنسبة المئوية فور اعتماد النتيجة رسمياً من الوزير.
           </p>
         </header>
 
@@ -410,7 +410,7 @@ export default function SearchSection({ onSelectStudent, customStudents = [] }) 
             <span>خطوات الاستعلام عن نتيجة الثانوية العامة برقم الجلوس</span>
           </h2>
           <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed font-medium">
-            لتسهيل العملية على الطلاب وتجنب بطء السيرفرات الرسمية أثناء اعتماد النتائج، يتيح لك موقعنا الخدمي المستقل استخراج نتيجتك في ثوانٍ معدودة عبر اتباع الخطوات البسيطة التالية:
+            لتسهيل العملية على الطلاب وتجنب بطء السيرفرات الرسمية أثناء اعتماد النتائج، يتيح لك موقعنا عبر <strong className="text-emerald-600 dark:text-emerald-400 font-bold">الرابط الرسمي</strong> استخراج نتيجتك في ثوانٍ معدودة عبر اتباع الخطوات البسيطة التالية:
           </p>
 
           <h3 className="text-lg font-extrabold text-slate-900 dark:text-white mt-4">
@@ -436,10 +436,10 @@ export default function SearchSection({ onSelectStudent, customStudents = [] }) 
         {/* H2 Official Features Section */}
         <section className="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-800">
           <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
-            ميزات موقعنا لاستخراج نتيجة الثانوية العامة 2026
+            ميزات الرابط الرسمي لاستخراج نتيجة الثانوية العامة 2026
           </h2>
           <p className="text-sm font-medium text-slate-600 dark:text-slate-300 leading-relaxed">
-            يقدم موقعنا المستقل تجربة استعلام فريدة تعتمد على سيرفرات فائقة السرعة تتحمل الضغط الجماهيري الهائل لحظة الإعلان الرسمي لنتائج الامتحانات. كما يوفر الموقع حاسبة التنسيق الذكية التي تتوقع الكليات والمعاهد المتاحة لمجموعك بناءً على ضوابط ومؤشرات التنسيق المعتمدة لهذا العام.
+            يقدم <strong className="text-emerald-600 dark:text-emerald-400">الرابط الرسمي</strong> عبر موقعنا تجربة استعلام فريدة تعتمد على سيرفرات فائقة السرعة تتحمل الضغط الجماهيري الهائل لحظة الإعلان الرسمي من قبل <strong className="text-slate-900 dark:text-white font-bold">وزارة التربية والتعليم والتعليم الفني</strong>. كما يوفر الموقع حاسبة التنسيق الذكية التي تتوقع الكليات والمعاهد المتاحة لمجموعك بناءً على ضوابط ومؤشرات التنسيق المعتمدة لهذا العام.
           </p>
 
           {/* DirectLink and NativeContainer placed once at safe location above. */}
