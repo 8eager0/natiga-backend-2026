@@ -23,6 +23,7 @@ import path from 'path';
 import os from 'os';
 import XLSX from 'xlsx';
 import zlib from 'zlib';
+import { buildDatabase } from './scripts/buildSqliteDb.js';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -214,7 +215,7 @@ let siteSettings = {
 // ============================================================
 let sqliteDb = null;
 
-const initSqliteDatabase = () => {
+const initSqliteDatabase = async () => {
   try {
     const candidateSqliteGz = [
       path.resolve(__dirname, 'database/natiga.sqlite.gz'),
@@ -232,14 +233,10 @@ const initSqliteDatabase = () => {
     let foundSqlite = candidateSqlite.find(p => fs.existsSync(p));
     let foundGz = candidateSqliteGz.find(p => fs.existsSync(p));
 
-    if (!foundSqlite && foundGz) {
-      console.log(`⚡ Decompressing SQLite database (${foundGz})...`);
-      const gzBuffer = fs.readFileSync(foundGz);
-      const decompressed = zlib.gunzipSync(gzBuffer);
-      const targetDbPath = candidateSqlite[0];
-      fs.writeFileSync(targetDbPath, decompressed);
-      foundSqlite = targetDbPath;
-      console.log(`✅ SQLite database decompressed successfully to ${targetDbPath}!`);
+    if (!foundSqlite && !foundGz) {
+      console.log('⚠️ SQLite DB missing on server startup. Auto-building from data/students.csv...');
+      await buildDatabase();
+      foundSqlite = candidateSqlite.find(p => fs.existsSync(p));
     }
 
     if (foundSqlite && fs.existsSync(foundSqlite)) {
@@ -258,15 +255,22 @@ const initSqliteDatabase = () => {
         );
       `);
       try { sqliteDb.exec(`ALTER TABLE leads ADD COLUMN seat_number VARCHAR(50)`); } catch (e) {}
-      const count = sqliteDb.prepare('SELECT COUNT(*) as count FROM students').get().count;
+      let count = 0;
+      try {
+        count = sqliteDb.prepare('SELECT COUNT(*) as count FROM students').get().count;
+      } catch (e) {}
+
       if (count > 0) {
         console.log(`⚡ Connected to indexed SQLite Database with ${count.toLocaleString('ar-EG')} students! (RAM footprint < 8MB)`);
       } else {
-        console.warn('⚠️ SQLite Database contains 0 rows. Falling back to JSON dataset.');
-        sqliteDb = null;
+        console.warn('⚠️ SQLite Database table empty. Building dataset...');
+        await buildDatabase();
+        sqliteDb = new DatabaseSync(foundSqlite);
+        count = sqliteDb.prepare('SELECT COUNT(*) as count FROM students').get().count;
+        console.log(`⚡ Connected to newly built SQLite Database with ${count.toLocaleString('ar-EG')} students!`);
       }
     } else {
-      console.warn('⚠️ SQLite DB not found in candidate paths:', candidateSqliteGz);
+      console.warn('⚠️ SQLite DB could not be built.');
     }
   } catch (err) {
     console.error('Error initializing SQLite DB:', err);
@@ -274,7 +278,7 @@ const initSqliteDatabase = () => {
   }
 };
 
-initSqliteDatabase();
+await initSqliteDatabase();
 
 const loadStudentsFromDisk = () => {
   // إذا SQLite مفعل، حمّل عينة صغيرة من البيانات لأغراض الإحصاء فقط
