@@ -34,11 +34,11 @@ export default function SearchSection({ onSelectStudent, customStudents = [] }) 
     setHasSearched(true);
     setLoadingStage(1);
 
-    const timer1 = setTimeout(() => setLoadingStage(2), 1200);
-    const timer2 = setTimeout(() => setLoadingStage(3), 2400);
+    const timer1 = setTimeout(() => setLoadingStage(2), 150);
+    const timer2 = setTimeout(() => setLoadingStage(3), 300);
 
     const matchedPromise = searchStudentsAsync(query, searchType, customStudents);
-    const delayPromise = new Promise(resolve => setTimeout(resolve, 3400));
+    const delayPromise = new Promise(resolve => setTimeout(resolve, 400));
 
     const [matched] = await Promise.all([matchedPromise, delayPromise]);
 
@@ -59,15 +59,15 @@ export default function SearchSection({ onSelectStudent, customStudents = [] }) 
       
       {/* Hero Header */}
       <div class="text-center mb-8">
-        <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-300 text-sm font-bold mb-4">
-          <Sparkles class="w-4 h-4 text-amber-500 animate-pulse" />
-          <span>ترقبوا إعلان نتيجة الثانوية العامة 2026 - النتائج لم تُعتمد رسمياً بعد</span>
+        <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 text-sm font-bold mb-4">
+          <Sparkles class="w-4 h-4 text-emerald-500 animate-pulse" />
+          <span>نتيجة الثانوية العامة 2026 متوفرة الآن</span>
         </div>
         <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 dark:text-white tracking-tight mb-3 leading-snug">
           نتيجة الثانوية العامة 2026
         </h1>
         <p class="text-base sm:text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto mb-4">
-          أدخل <span class="font-black text-emerald-600 dark:text-emerald-400">رقم الجلوس</span> أو <span class="font-black text-amber-600 dark:text-amber-400">اسم الطالب</span> وسارع بالاستعلام فور اعتماد النتيجة رسمياً من الوزارة.
+          أدخل <span class="font-black text-emerald-600 dark:text-emerald-400">رقم الجلوس</span> أو <span class="font-black text-amber-600 dark:text-amber-400">اسم الطالب</span> للاستعلام عن النتيجة فوراً.
         </p>
 
         {/* Adsterra Top Leaderboard Ad Unit */}
