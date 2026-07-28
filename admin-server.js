@@ -971,8 +971,13 @@ app.get('/api/search', searchLimiter, async (req, res) => {
           sql += ' AND (seat_number = ? OR seat_number LIKE ?)';
           params.push(normQ, `%${normQ}%`);
         } else {
-          sql += ' AND name LIKE ?';
-          params.push(`%${normQ}%`);
+          const words = normQ.split(/\s+/).filter(w => w.length > 0);
+          if (words.length > 0) {
+            for (const word of words) {
+              sql += ' AND (normalized_name LIKE ? OR name LIKE ?)';
+              params.push(`%${word}%`, `%${word}%`);
+            }
+          }
         }
       }
       if (minScore !== null) {

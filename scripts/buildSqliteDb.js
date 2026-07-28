@@ -13,7 +13,20 @@ if (!fs.existsSync(dbDir)) {
 
 console.log('⚡ بدء إنشاء وتشغيل قاعدة البيانات المحلية فائقة السرعة (SQLite Local Engine)...');
 
-// 1. تحويل الأرقام العربية إلى إنجليزية
+// 1. تطبيع النصوص والأرقام العربية
+export function normalizeArabic(text) {
+  if (!text) return '';
+  const str = String(text).trim();
+  const convertedDigits = str.replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
+  return convertedDigits
+    .replace(/[أإآ]/g, 'ا')
+    .replace(/ة/g, 'ه')
+    .replace(/ى/g, 'ي')
+    .replace(/[\u064B-\u0652]/g, '') // حذف التشكيل
+    .replace(/\s+/g, ' ')
+    .toLowerCase();
+}
+
 function normalizeDigits(text) {
   if (!text) return '';
   const str = String(text).trim();
@@ -73,7 +86,7 @@ export async function buildDatabase() {
   }
 
   console.log(`📖 تم العثور على ملف النتيجة CSV: ${path.basename(csvFile)}`);
-  console.log('⏳ جاري قراءة وتغذية قاعدة بيانات SQLite بالتدفق المباشر (Zero-RAM Stream)...');
+  console.log('⏳ جاري قراءة وتغذية قاعدة بيانات SQLite بالتدفق المباشر مع فهرسة الأسماء المطبعة...');
 
   const db = new DatabaseSync(dbPath);
 
@@ -86,6 +99,7 @@ export async function buildDatabase() {
     CREATE TABLE IF NOT EXISTS students (
       seat_number TEXT PRIMARY KEY,
       name TEXT NOT NULL,
+      normalized_name TEXT NOT NULL,
       total_score REAL NOT NULL,
       percentage REAL NOT NULL,
       status TEXT NOT NULL,
@@ -95,12 +109,13 @@ export async function buildDatabase() {
     );
 
     CREATE INDEX IF NOT EXISTS idx_students_name ON students(name);
+    CREATE INDEX IF NOT EXISTS idx_students_norm_name ON students(normalized_name);
     CREATE INDEX IF NOT EXISTS idx_students_percentage ON students(percentage);
   `);
 
   const insertStmt = db.prepare(`
-    INSERT OR REPLACE INTO students (seat_number, name, total_score, percentage, status, branch, governorate, school)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT OR REPLACE INTO students (seat_number, name, normalized_name, total_score, percentage, status, branch, governorate, school)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
 
   db.exec('BEGIN TRANSACTION');
@@ -149,10 +164,12 @@ export async function buildDatabase() {
     const governorate = colIndexes.governorate !== -1 ? row[colIndexes.governorate] : 'جمهورية مصر العربية';
     const school = colIndexes.school !== -1 ? row[colIndexes.school] : 'المدرسة الثانوية العامة';
     const status = colIndexes.status !== -1 ? row[colIndexes.status] : (percentage >= 50 ? 'ناجح' : 'راسب');
+    const normalizedName = normalizeArabic(name);
 
     insertStmt.run(
       String(seatNumber),
       String(name),
+      String(normalizedName),
       totalScore,
       percentage,
       String(status),
@@ -165,7 +182,7 @@ export async function buildDatabase() {
 
   db.exec('COMMIT');
 
-  console.log(`🎉 تم بنجاح بناء قاعدة البيانات المحلية SQLite! عدد الطلاب: ${count.toLocaleString('ar-EG')}`);
+  console.log(`🎉 تم بنجاح بناء وقواعد البيانات مع المطابقة الذكية للأسماء! عدد الطلاب: ${count.toLocaleString('ar-EG')}`);
   db.close();
 }
 
