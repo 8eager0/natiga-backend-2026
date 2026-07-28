@@ -278,7 +278,7 @@ const initSqliteDatabase = async () => {
   }
 };
 
-initSqliteDatabase().catch(err => console.error('Init DB Error:', err));
+// initSqliteDatabase is called after app.listen below
 
 const loadStudentsFromDisk = () => {
   // إذا SQLite مفعل، حمّل عينة صغيرة من البيانات لأغراض الإحصاء فقط
@@ -1119,4 +1119,6 @@ app.listen(ADMIN_PORT, () => {
   console.log(`🔒 IP Whitelist: ${ALLOWED_IPS.filter(ip => ip !== '::1' && ip !== '::ffff:127.0.0.1').join(', ')}`);
   console.log(`🔑 JWT Auth: Enabled (8h expiry)`);
   console.log(`🌐 Admin Panel URL: http://localhost:3000/secure-admin-portal\n`);
+
+  initSqliteDatabase().catch(err => console.error('Init DB Error:', err));
 });

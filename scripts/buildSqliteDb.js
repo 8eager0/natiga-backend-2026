@@ -178,6 +178,11 @@ export async function buildDatabase() {
       String(school)
     );
     count++;
+    if (count % 5000 === 0) {
+      db.exec('COMMIT');
+      db.exec('BEGIN TRANSACTION');
+      await new Promise(resolve => setImmediate(resolve));
+    }
   }
 
   db.exec('COMMIT');
