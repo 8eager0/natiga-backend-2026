@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { ShieldAlert, RefreshCw, AlertOctagon } from 'lucide-react';
+import { ShieldAlert, RefreshCw, AlertOctagon, X } from 'lucide-react';
 import { useAds } from './AdsContext';
 
 export default function AntiAdblockModal() {
   const { adsEnabled } = useAds();
   const [isAdBlockerActive, setIsAdBlockerActive] = useState(false);
+  const [isDismissed, setIsDismissed] = useState(false);
 
   useEffect(() => {
     if (!adsEnabled) {
@@ -17,7 +18,7 @@ export default function AntiAdblockModal() {
       // Test 1: Try to fetch official Adsterra script URL
       try {
         const testUrl = 'https://www.highperformanceformat.com/73b413bfa62a149527b4f12554f5b827/invoke.js';
-        const res = await fetch(testUrl, { method: 'HEAD', mode: 'no-cors' });
+        await fetch(testUrl, { method: 'HEAD', mode: 'no-cors' });
       } catch (err) {
         // Network error usually indicates AdBlock extension blocked the domain
         isBlocked = true;
@@ -52,54 +53,62 @@ export default function AntiAdblockModal() {
 
     detectAdBlocker();
 
-    // Re-check periodically every 4 seconds
-    const interval = setInterval(detectAdBlocker, 4000);
+    // Re-check periodically every 10 seconds
+    const interval = setInterval(detectAdBlocker, 10000);
     return () => clearInterval(interval);
   }, [adsEnabled]);
 
-  if (!adsEnabled || !isAdBlockerActive) return null;
+  if (!adsEnabled || !isAdBlockerActive || isDismissed) return null;
 
   return (
-    <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-slate-950/90 backdrop-blur-xl p-4 sm:p-6 text-right animate-fadeIn">
-      <div className="max-w-md w-full bg-slate-900 border-2 border-red-500/80 rounded-3xl p-6 sm:p-8 shadow-2xl shadow-red-500/20 text-center space-y-5 relative overflow-hidden">
+    <div className="fixed bottom-4 right-4 left-4 sm:left-auto sm:max-w-md z-50 animate-fadeIn">
+      <div className="bg-slate-900/95 backdrop-blur-md border border-amber-500/50 rounded-2xl p-4 sm:p-5 shadow-2xl shadow-slate-950/50 text-right relative overflow-hidden text-slate-100">
         
-        {/* Background Red Glow */}
-        <div className="absolute -top-20 -right-20 w-48 h-48 bg-red-600/20 rounded-full blur-3xl pointer-events-none"></div>
-
-        {/* Warning Icon */}
-        <div className="w-20 h-20 rounded-2xl bg-red-500/10 border border-red-500/30 flex items-center justify-center text-red-500 mx-auto shadow-inner">
-          <ShieldAlert className="w-10 h-10 animate-bounce" />
-        </div>
-
-        {/* Main Title */}
-        <div className="space-y-2">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-500/20 text-red-400 text-xs font-black">
-            <AlertOctagon className="w-3.5 h-3.5" />
-            <span>تم اكتشاف مانع الإعلانات (AdBlock)</span>
-          </span>
-          <h2 className="text-2xl font-black text-white leading-snug">
-            يرجى إيقاف مانع الإعلانات لاستكمال الاستعلام عن النتيجة
-          </h2>
-        </div>
-
-        {/* Description */}
-        <p className="text-xs sm:text-sm text-slate-300 font-bold leading-relaxed max-w-sm mx-auto">
-          الموقع مجاني بالكامل ويستمر بتقديم الخدمة الفورية مجاناً بدعم الإعلانات. يرجى تعطيل مانع الإعلانات على متصفحك ثم إعادة تحديث الصفحة لمشاهدة النتيجة وحاسبة التنسيق.
-        </p>
-
-        {/* Action Button */}
+        {/* Close Button */}
         <button
-          onClick={() => window.location.reload()}
-          className="w-full py-4 rounded-xl bg-gradient-to-r from-red-600 via-rose-600 to-red-700 hover:from-red-700 hover:to-rose-700 text-white font-black text-sm sm:text-base shadow-lg shadow-red-600/30 transition-all flex items-center justify-center gap-2.5 transform hover:-translate-y-0.5"
+          onClick={() => setIsDismissed(true)}
+          className="absolute top-3 left-3 p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+          title="إغلاق التنبيه"
         >
-          <RefreshCw className="w-5 h-5 animate-spin-slow" />
-          <span>قم بإيقاف مانع الإعلانات واضغط هنا لإعادة التحديث</span>
+          <X className="w-5 h-5" />
         </button>
 
-        <p className="text-[11px] font-semibold text-slate-500">
-          شكراً لتفهمك ودعمك لاستمرار الخدمة المجانية 🎓
-        </p>
+        <div className="flex items-start gap-3">
+          <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 shrink-0 mt-0.5">
+            <ShieldAlert className="w-6 h-6 animate-pulse" />
+          </div>
+
+          <div className="space-y-1.5 pl-6">
+            <div className="flex items-center gap-1.5 text-amber-400 text-xs font-black">
+              <AlertOctagon className="w-3.5 h-3.5" />
+              <span>تنبيه مانع الإعلانات</span>
+            </div>
+            <h3 className="text-sm font-extrabold text-white leading-snug">
+              يرجى دعم الموقع بإيقاف مانع الإعلانات (AdBlock)
+            </h3>
+            <p className="text-xs text-slate-300 font-medium leading-relaxed">
+              يقدم الموقع خدمة الاستعلام المجانية بفضل الإعلانات. يرجى إيقاف مانع الإعلانات لاستمرار الخدمة.
+            </p>
+
+            <div className="pt-2 flex items-center gap-2">
+              <button
+                onClick={() => window.location.reload()}
+                className="px-3.5 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs transition-all flex items-center gap-1.5"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+                <span>إعادة التحديث</span>
+              </button>
+              <button
+                onClick={() => setIsDismissed(true)}
+                className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs transition-all"
+              >
+                متابعة التصفح
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
 }
+
