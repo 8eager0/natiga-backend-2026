@@ -14,7 +14,7 @@ export default function SearchSection({ onSelectStudent, customStudents = [] }) 
   const [isSearching, setIsSearching] = useState(false);
   const [loadingStage, setLoadingStage] = useState(1);
   const [activeServer, setActiveServer] = useState(1);
-  const [totalDbCount, setTotalDbCount] = useState(810980);
+  const [totalDbCount, setTotalDbCount] = useState(919396);
 
   // Check backend connection on mount
   useEffect(() => {
@@ -190,7 +190,7 @@ export default function SearchSection({ onSelectStudent, customStudents = [] }) 
               onChange={(e) => setQuery(e.target.value)}
               placeholder={
                 searchType === 'seatNumber'
-                  ? 'أدخل رقم الجلوس (مثال: 102450)'
+                  ? 'أدخل رقم الجلوس (مثال: 2001970)'
                   : 'أدخل اسم الطالب (مثال: سلمى أو أحمد)'
               }
               class="w-full pl-12 pr-12 py-4 sm:py-5 bg-slate-50 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 rounded-2xl text-lg font-bold text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-600 transition-all text-right"
@@ -313,16 +313,16 @@ export default function SearchSection({ onSelectStudent, customStudents = [] }) 
               </div>
               <div className="space-y-2">
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-200/60 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200 text-xs font-black">
-                  <span>تنبيه هام - بوابة النتائج 2026</span>
+                  <span>تنبيه الاستعلام - بوابة النتائج 2026</span>
                 </span>
                 <h3 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white leading-snug">
-                  النتيجة لسه مطلعتش! 🎓
+                  لم نتمكن من العثور على النتيجة! 🔍
                 </h3>
               </div>
               <p className="text-sm sm:text-base font-bold text-slate-700 dark:text-slate-300 leading-relaxed max-w-lg mx-auto">
-                عفواً، نتيجة امتحانات الثانوية العامة لعام 2026 لم تُعتمد رسمياً حتى الآن من وزارة التربية والتعليم والتعليم الفني. 
+                عفواً، لا توجد نتائج مطابقة لبيانات الاستعلام المكتوبة.
                 <br className="hidden sm:inline" />
-                يرجى متابعتنا، وسيتفعل الاستعلام السريع فور الإعلان الرسمي!
+                يرجى التأكد من كتابة <span className="text-emerald-600 dark:text-emerald-400">رقم الجلوس الصحيح (مثال: 2001970)</span> أو البحث بالاسم الرباعي.
               </p>
               <div className="pt-3 flex justify-center">
                 <a
@@ -332,7 +332,7 @@ export default function SearchSection({ onSelectStudent, customStudents = [] }) 
                   className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-sky-500 hover:bg-sky-600 text-white font-black text-xs sm:text-sm shadow-md transition-all"
                 >
                   <Send className="w-4 h-4" />
-                  <span>انضم لجروب التليجرام لتكون أول من يعلم فور الاعتماد</span>
+                  <span>انضم لجروب التليجرام للمساعدة والمتابعة المباشرة</span>
                 </a>
               </div>
             </div>
