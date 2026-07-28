@@ -278,7 +278,7 @@ const initSqliteDatabase = async () => {
   }
 };
 
-await initSqliteDatabase();
+initSqliteDatabase().catch(err => console.error('Init DB Error:', err));
 
 const loadStudentsFromDisk = () => {
   // إذا SQLite مفعل، حمّل عينة صغيرة من البيانات لأغراض الإحصاء فقط
