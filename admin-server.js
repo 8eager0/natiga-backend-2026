@@ -834,6 +834,11 @@ app.get('/admin/monitor', authMiddleware, async (req, res) => {
   const usedMem = totalMem - freeMem;
   const memUsagePercent = ((usedMem / totalMem) * 100).toFixed(1);
 
+  const sysUptime = process.uptime();
+  const uptimeDays = Math.floor(sysUptime / (3600 * 24));
+  const uptimeHours = Math.floor((sysUptime % (3600 * 24)) / 3600);
+  const uptimeMinutes = Math.floor((sysUptime % 3600) / 60);
+
   // حساب متوسط استخدام CPU
   const cpuUsage = await new Promise((resolve) => {
     const startMeasure = os.cpus().map(c => ({ idle: c.times.idle, total: Object.values(c.times).reduce((a, b) => a + b) }));
