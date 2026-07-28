@@ -210,60 +210,8 @@ let siteSettings = {
 };
 
 // ============================================================
-// Supabase PostgreSQL Pool (بيانات دائمة لا تُمحى)
+// SQLite & In-Memory Data Loading
 // ============================================================
-let pgPool = null;
-
-const initSupabasePool = async () => {
-  const dbUrl = process.env.SUPABASE_DB_URL;
-  if (!dbUrl) {
-    console.warn('⚠️  SUPABASE_DB_URL غير موجود - سيتم استخدام الذاكرة المؤقتة فقط');
-    return;
-  }
-  try {
-    pgPool = new Pool({
-      connectionString: dbUrl,
-      ssl: { rejectUnauthorized: false },
-      max: 5,
-      idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 5000,
-    });
-
-    await pgPool.query(`
-      CREATE TABLE IF NOT EXISTS leads (
-        id SERIAL PRIMARY KEY,
-        student_name VARCHAR(255),
-        whatsapp_number VARCHAR(50),
-        seat_number VARCHAR(50),
-        governorate VARCHAR(100),
-        academic_branch VARCHAR(100),
-        total_score NUMERIC,
-        percentage NUMERIC,
-        created_at TIMESTAMPTZ DEFAULT NOW()
-      );
-
-      CREATE TABLE IF NOT EXISTS student_results (
-        id SERIAL PRIMARY KEY,
-        seat_number VARCHAR(50) UNIQUE NOT NULL,
-        student_name VARCHAR(255) NOT NULL,
-        total_score NUMERIC,
-        percentage NUMERIC,
-        branch VARCHAR(100),
-        status VARCHAR(50) DEFAULT 'ناجح'
-      );
-
-      CREATE INDEX IF NOT EXISTS idx_seat_number ON student_results(seat_number);
-    `);
-    console.log('✅ Supabase PostgreSQL متصل - الجداول والفهارس (idx_seat_number) جاهزة');
-  } catch (err) {
-    console.error('❌ خطأ في الاتصال بـ Supabase:', err.message);
-    pgPool = null;
-  }
-};
-
-// =============================
-// تحميل البيانات في الذاكرة
-// =============================
 let sqliteDb = null;
 
 const initSqliteDatabase = () => {
@@ -332,7 +280,7 @@ const loadStudentsFromDisk = () => {
   // إذا SQLite مفعل، حمّل عينة صغيرة من البيانات لأغراض الإحصاء فقط
   if (sqliteDb) {
     try {
-      const rows = sqliteDb.prepare('SELECT seatNumber, name, percentage FROM students LIMIT 5000').all();
+      const rows = sqliteDb.prepare('SELECT seat_number as seatNumber, name, percentage FROM students LIMIT 5000').all();
       studentsArray = rows;
       seatMap.clear();
       for (const st of studentsArray) {
@@ -633,18 +581,7 @@ app.get('/admin/leads', authMiddleware, async (req, res) => {
   const { minPercentage, branch, page = 1, limit = 50 } = req.query;
   let allLeads = [];
 
-  // ✅ أولوية Supabase
-  if (pgPool) {
-    try {
-      const result = await pgPool.query(
-        `SELECT id, student_name as "studentName", whatsapp_number as "phoneNumber", seat_number as "seatNumber", governorate, academic_branch as "preferredBranch", total_score as "totalScore", percentage, created_at as "createdAt" FROM leads ORDER BY id DESC`
-      );
-      allLeads = result.rows;
-    } catch (e) {
-      console.error('Supabase leads fetch error:', e.message);
-      allLeads = sqliteDb ? sqliteDb.prepare('SELECT id, student_name as studentName, whatsapp_number as phoneNumber, seat_number as seatNumber, governorate, academic_branch as preferredBranch, total_score as totalScore, percentage, created_at as createdAt FROM leads ORDER BY id DESC').all() : [...leadsDB];
-    }
-  } else if (sqliteDb) {
+  if (sqliteDb) {
     try {
       allLeads = sqliteDb.prepare('SELECT id, student_name as studentName, whatsapp_number as phoneNumber, seat_number as seatNumber, governorate, academic_branch as preferredBranch, total_score as totalScore, percentage, created_at as createdAt FROM leads ORDER BY id DESC').all();
     } catch (e) { allLeads = [...leadsDB]; }
@@ -678,18 +615,7 @@ app.get('/admin/leads/export-csv', authMiddleware, async (req, res) => {
   const { minPercentage, branch } = req.query;
   let allLeads = [];
 
-  // ✅ أولوية Supabase
-  if (pgPool) {
-    try {
-      const result = await pgPool.query(
-        `SELECT id, student_name as "studentName", whatsapp_number as "phoneNumber", seat_number as "seatNumber", governorate, academic_branch as "preferredBranch", total_score as "totalScore", percentage, created_at as "createdAt" FROM leads ORDER BY id DESC`
-      );
-      allLeads = result.rows;
-    } catch (e) {
-      console.error('Supabase CSV export error:', e.message);
-      allLeads = sqliteDb ? sqliteDb.prepare('SELECT id, student_name as studentName, whatsapp_number as phoneNumber, seat_number as seatNumber, governorate, academic_branch as preferredBranch, total_score as totalScore, percentage, created_at as createdAt FROM leads ORDER BY id DESC').all() : [...leadsDB];
-    }
-  } else if (sqliteDb) {
+  if (sqliteDb) {
     try {
       allLeads = sqliteDb.prepare('SELECT id, student_name as studentName, whatsapp_number as phoneNumber, seat_number as seatNumber, governorate, academic_branch as preferredBranch, total_score as totalScore, percentage, created_at as createdAt FROM leads ORDER BY id DESC').all();
     } catch (e) { allLeads = [...leadsDB]; }
@@ -803,31 +729,7 @@ app.post('/api/leads', async (req, res) => {
   const createdAt = new Date().toISOString();
   let leadId = leadsIdCounter++;
 
-  // ✅ الأولوية: Supabase PostgreSQL (دائم لا يُمحى)
-  if (pgPool) {
-    try {
-      const result = await pgPool.query(
-        `INSERT INTO leads (student_name, whatsapp_number, seat_number, governorate, academic_branch, total_score, percentage, created_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`,
-        [sName, wNum, sSeat, gov, branch, total_score, percentage, createdAt]
-      );
-      leadId = result.rows[0]?.id || leadId;
-      console.log(`✅ Lead saved to Supabase: ID=${leadId}`);
-    } catch (err) {
-      console.error('❌ Supabase insert error:', err.message);
-      // Fallback to SQLite
-      if (sqliteDb) {
-        try {
-          const stmt = sqliteDb.prepare(`
-            INSERT INTO leads (student_name, whatsapp_number, seat_number, governorate, academic_branch, total_score, percentage, created_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)`);
-          const r = stmt.run(sName, wNum, sSeat, gov, branch, total_score, percentage, createdAt);
-          if (r?.lastInsertRowid) leadId = Number(r.lastInsertRowid);
-        } catch (e) { console.error('SQLite fallback error:', e.message); }
-      }
-    }
-  } else if (sqliteDb) {
-    // Fallback: SQLite فقط
+  if (sqliteDb) {
     try {
       const stmt = sqliteDb.prepare(`
         INSERT INTO leads (student_name, whatsapp_number, seat_number, governorate, academic_branch, total_score, percentage, created_at)
@@ -882,18 +784,10 @@ app.get('/api/result/:seatNumber', resultSearchLimiter, async (req, res) => {
   try {
     let studentResult = null;
 
-    if (pgPool) {
-      const dbRes = await pgPool.query(
-        'SELECT id, seat_number as "seatNumber", student_name as "name", total_score as "totalScore", percentage, branch, status FROM student_results WHERE seat_number = $1 LIMIT 1',
-        [sSeat]
-      );
-      studentResult = dbRes.rows[0] || null;
-    }
-
-    if (!studentResult && sqliteDb) {
+    if (sqliteDb) {
       try {
         const sqlRes = sqliteDb.prepare(
-          'SELECT seatNumber, name, totalScore, percentage, branch, status FROM students WHERE seatNumber = ? LIMIT 1'
+          'SELECT seat_number as seatNumber, name, total_score as totalScore, percentage, branch, status FROM students WHERE seat_number = ? LIMIT 1'
         ).get(sSeat);
         if (sqlRes) studentResult = sqlRes;
       } catch (e) {}
@@ -1206,10 +1100,9 @@ app.get('/api/stats', (req, res) => {
 });
 
 
-app.listen(ADMIN_PORT, async () => {
+app.listen(ADMIN_PORT, () => {
   console.log(`\n🛡️  Natiga Admin Server running on http://localhost:${ADMIN_PORT}`);
   console.log(`🔒 IP Whitelist: ${ALLOWED_IPS.filter(ip => ip !== '::1' && ip !== '::ffff:127.0.0.1').join(', ')}`);
   console.log(`🔑 JWT Auth: Enabled (8h expiry)`);
   console.log(`🌐 Admin Panel URL: http://localhost:3000/secure-admin-portal\n`);
-  await initSupabasePool();
 });
