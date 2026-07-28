@@ -99,11 +99,12 @@ async function buildDatabase() {
         headers.forEach((h, idx) => {
           if (h.includes('جلوس') || h.includes('seat')) colIndexes.seatNumber = idx;
           else if (h.includes('اسم') || h.includes('name')) colIndexes.name = idx;
-          else if (h.includes('مجموع') || h.includes('score') || h.includes('درجة')) colIndexes.totalScore = idx;
+          else if (h.includes('مجموع') || h.includes('score') || h.includes('درجة') || h.includes('degree') || h.includes('total')) colIndexes.totalScore = idx;
           else if (h.includes('نسبة') || h.includes('percent')) colIndexes.percentage = idx;
           else if (h.includes('شعبة') || h.includes('تخصص') || h.includes('branch')) colIndexes.branch = idx;
           else if (h.includes('محافظة') || h.includes('gov')) colIndexes.governorate = idx;
           else if (h.includes('مدرسة') || h.includes('school')) colIndexes.school = idx;
+          else if (h.includes('حالة') || h.includes('case') || h.includes('status')) colIndexes.status = idx;
         });
         continue;
       }
