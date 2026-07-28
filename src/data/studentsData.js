@@ -8,6 +8,7 @@ export const normalizeArabic = (text) => {
     .replace(/ة/g, 'ه')
     .replace(/ى/g, 'ي')
     .replace(/[\u064B-\u0652]/g, '')
+    .replace(/\s+/g, ' ')
     .toLowerCase();
 };
 
@@ -39,7 +40,7 @@ export const calculateStudentStats = (student) => {
 
 import { API_BASE_URL } from '../config';
 
-// Async API search against backend database
+// Async API search against backend database with smart retries
 export const searchStudentsAsync = async (query, searchType = 'seatNumber', customStudents = [], filters = {}) => {
   const normQuery = normalizeArabic(query);
   const { minScore, maxScore } = filters;
@@ -52,16 +53,27 @@ export const searchStudentsAsync = async (query, searchType = 'seatNumber', cust
   if (minScore !== undefined && minScore !== '') url += `&minScore=${minScore}`;
   if (maxScore !== undefined && maxScore !== '') url += `&maxScore=${maxScore}`;
 
-  try {
-    const res = await fetch(url);
-    if (res.ok) {
-      const data = await res.json();
-      if (Array.isArray(data)) {
-        return data;
+  // Retry up to 3 times in case of server cold-start
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 12000);
+
+      const res = await fetch(url, { signal: controller.signal });
+      clearTimeout(timeoutId);
+
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          return data;
+        }
+      }
+    } catch (err) {
+      console.warn(`Search attempt ${attempt} failed, retrying...`, err.message);
+      if (attempt < 3) {
+        await new Promise(r => setTimeout(r, 1500));
       }
     }
-  } catch (err) {
-    console.warn('Backend API search:', err);
   }
 
   return [];
